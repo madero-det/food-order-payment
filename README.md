@@ -201,6 +201,15 @@ xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
 - Start: `node src/index.js`
 - Keep awake: [cron-job.org](https://cron-job.org) ping every 14 minutes to `/api/health`
 
+### Image Uploads (Cloudinary)
+1. Create a free account at [cloudinary.com](https://cloudinary.com)
+2. From dashboard, copy: **Cloud Name**, **API Key**, **API Secret**
+3. Add them as env vars on Render:
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+4. Profile images are auto-resized to 400x400 and served via Cloudinary CDN
+
 ### Database (Neon.tech)
 - Free PostgreSQL with connection string
 - Export from Docker: `docker exec food-order-pg pg_dump -U postgres -d food_order --no-owner > backup.sql`
