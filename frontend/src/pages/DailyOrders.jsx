@@ -10,7 +10,9 @@ export default function DailyOrders() {
   const user = api.getCurrentUser();
   const isAdmin = user?.role === 'admin';
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const initialDate = searchParams.get('date') || todayStr;
   const [date, setDate] = useState(initialDate);
   const [orders, setOrders] = useState([]);
   const [persons, setPersons] = useState([]);

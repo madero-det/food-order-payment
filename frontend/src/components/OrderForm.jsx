@@ -38,7 +38,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
   };
 
   const [formData, setFormData] = useState({
-    order_date: toDateInput(initialData.order_date) || new Date().toISOString().split('T')[0],
+    order_date: toDateInput(initialData.order_date) || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; })(),
     person_id: initialData.person_id ? String(initialData.person_id) : '',
     price: toPriceString(initialData.price),
     paid_amount: toPriceString(initialData.paid_amount),

@@ -1,12 +1,20 @@
 export default function DateSelector({ date, onChange }) {
   const shift = (days) => {
-    const d = new Date(date);
+    const parts = date.split('-');
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
     d.setDate(d.getDate() + days);
-    onChange(d.toISOString().split('T')[0]);
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    onChange(`${yy}-${mm}-${dd}`);
   };
 
   const goToToday = () => {
-    onChange(new Date().toISOString().split('T')[0]);
+    const now = new Date();
+    const yy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    onChange(`${yy}-${mm}-${dd}`);
   };
 
   return (
