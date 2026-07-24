@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, getUploadsBase } from '../api/client';
+import { api, getImageUrl } from '../api/client';
 import PersonForm from '../components/PersonForm';
 import CropModal from '../components/CropModal';
 
@@ -198,7 +198,7 @@ export default function Persons({ user, onUserUpdate }) {
                   <td>{idx + 1}</td>
                   <td>
                     <PersonAvatar
-                      src={p.profile_image ? `${getUploadsBase()}/${p.profile_image}` : null}
+                      src={getImageUrl(p.profile_image)}
                       name={p.name}
                       personId={p.id}
                       canEdit={isAdmin || p.id === user.id}
@@ -254,7 +254,7 @@ export default function Persons({ user, onUserUpdate }) {
                 <div className="order-card-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <PersonAvatar
-                      src={p.profile_image ? `${getUploadsBase()}/${p.profile_image}` : null}
+                      src={getImageUrl(p.profile_image)}
                       name={p.name}
                       personId={p.id}
                       canEdit={isAdmin || p.id === user.id}

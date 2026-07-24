@@ -34,7 +34,7 @@ import PersonOrders from './pages/PersonOrders';
 import ChangePassword from './pages/ChangePassword';
 import Notifications from './pages/Notifications';
 import { ToastProvider, useToast } from './components/Toast';
-import { api, getUploadsBase } from './api/client';
+import { api, getImageUrl } from './api/client';
 import useSSE from './hooks/useSSE';
 
 function getInitials(name) {
@@ -42,7 +42,7 @@ function getInitials(name) {
 }
 
 function NavbarAvatar({ user }) {
-  const avatarUrl = user.profile_image ? `${getUploadsBase()}/${user.profile_image}` : null;
+  const avatarUrl = getImageUrl(user.profile_image);
 
   return (
     <div className="nav-avatar-wrap">

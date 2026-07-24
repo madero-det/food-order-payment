@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { api, getUploadsBase } from '../api/client';
+import { api, getImageUrl } from '../api/client';
 import useSSE from '../hooks/useSSE';
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -153,7 +153,7 @@ export default function Dashboard() {
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           {o.person_avatar ? (
-                            <img src={`${getUploadsBase()}/${o.person_avatar}`} alt="" className="avatar" style={{ width: 24, height: 24 }} />
+                            <img src={getImageUrl(o.person_avatar)} alt="" className="avatar" style={{ width: 24, height: 24 }} />
                           ) : (
                             <div className="avatar avatar-initials" style={{ width: 24, height: 24, fontSize: '0.6rem' }}>
                               {o.person_name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
@@ -189,7 +189,7 @@ export default function Dashboard() {
                     <div className="order-card-header">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {o.person_avatar ? (
-                          <img src={`${getUploadsBase()}/${o.person_avatar}`} alt="" className="avatar" style={{ width: 28, height: 28 }} />
+                          <img src={getImageUrl(o.person_avatar)} alt="" className="avatar" style={{ width: 28, height: 28 }} />
                         ) : (
                           <div className="avatar avatar-initials" style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
                             {o.person_name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}

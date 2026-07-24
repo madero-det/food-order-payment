@@ -2,7 +2,11 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const UPLOADS_BASE = import.meta.env.VITE_UPLOADS_URL || '/uploads';
 
 export { API_BASE, UPLOADS_BASE };
-export const getUploadsBase = () => UPLOADS_BASE;
+export const getImageUrl = (filename) => {
+  if (!filename) return null;
+  if (filename.startsWith('http')) return filename;
+  return `${UPLOADS_BASE}/${filename}`;
+};
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token') || sessionStorage.getItem('token');

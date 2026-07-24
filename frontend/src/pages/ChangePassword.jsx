@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, getUploadsBase } from '../api/client';
+import { api, getImageUrl } from '../api/client';
 import CropModal from '../components/CropModal';
 
 function getInitials(name) {
@@ -90,7 +90,7 @@ export default function ChangePassword({ onUserUpdate }) {
     setNotifPermission(result);
   };
 
-  const avatarUrl = user?.profile_image ? `${getUploadsBase()}/${user.profile_image}` : null;
+  const avatarUrl = getImageUrl(user?.profile_image);
 
   return (
     <div style={{ maxWidth: '400px', margin: '2rem auto' }}>

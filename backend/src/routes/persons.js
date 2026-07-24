@@ -1,33 +1,23 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { fileURLToPath } from 'url';
-import { dirname, join, extname } from 'path';
-import { existsSync, mkdirSync, unlinkSync } from 'fs';
+import cloudinary from 'cloudinary';
 import pool from '../db.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const uploadsDir = join(__dirname, '..', '..', 'uploads');
-
-if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const ext = extname(file.originalname).toLowerCase();
-    cb(null, `avatar-${req.params.id}-${Date.now()}${ext}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /jpeg|jpg|png|gif|webp/;
-    const ext = allowed.test(extname(file.originalname).toLowerCase());
+    const ext = allowed.test(file.originalname.toLowerCase().split('.').pop());
     const mime = allowed.test(file.mimetype.split('/')[1]);
     cb(null, ext && mime);
   },
+});
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const router = Router();
@@ -142,14 +132,27 @@ router.post('/:id/avatar', upload.single('image'), async (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Image file required (jpeg, png, gif, webp)' });
     }
+
     const existing = await pool.query('SELECT profile_image FROM persons WHERE id = $1', [id]);
     if (existing.rows[0]?.profile_image) {
-      const oldPath = join(uploadsDir, existing.rows[0].profile_image);
-      if (existsSync(oldPath)) unlinkSync(oldPath);
+      const publicId = existing.rows[0].profile_image.match(/\/upload\/v\d+\/(.+)\./);
+      if (publicId) {
+        cloudinary.v2.uploader.destroy(publicId[1]).catch(() => {});
+      }
     }
+
+    const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const uploadResult = await cloudinary.v2.uploader.upload(b64, {
+      folder: 'food-order-avatars',
+      public_id: `avatar-${id}-${Date.now()}`,
+      width: 400,
+      height: 400,
+      crop: 'fill',
+    });
+
     const result = await pool.query(
       'UPDATE persons SET profile_image = $1 WHERE id = $2 RETURNING id, name, role, profile_image',
-      [req.file.filename, id]
+      [uploadResult.secure_url, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Person not found' });

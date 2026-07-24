@@ -1,4 +1,4 @@
-import { getUploadsBase } from '../api/client';
+import { getImageUrl } from '../api/client';
 
 function getInitials(name) {
   return name ? name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
@@ -111,7 +111,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
             <td>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {order.person_avatar ? (
-                  <img src={`${getUploadsBase()}/${order.person_avatar}`} alt="" className="avatar" style={{ width: 26, height: 26 }} />
+                  <img src={getImageUrl(order.person_avatar)} alt="" className="avatar" style={{ width: 26, height: 26 }} />
                 ) : (
                   <div className="avatar avatar-initials" style={{ width: 26, height: 26, fontSize: '0.6rem' }}>
                     {getInitials(order.person_name)}
@@ -138,7 +138,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
           <div className="order-card-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {order.person_avatar ? (
-                <img src={`${getUploadsBase()}/${order.person_avatar}`} alt="" className="avatar" style={{ width: 28, height: 28 }} />
+                <img src={getImageUrl(order.person_avatar)} alt="" className="avatar" style={{ width: 28, height: 28 }} />
               ) : (
                 <div className="avatar avatar-initials" style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
                   {getInitials(order.person_name)}
