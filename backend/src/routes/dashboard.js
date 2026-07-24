@@ -3,6 +3,10 @@ import pool from '../db.js';
 
 const router = Router();
 
+function todayKHM() {
+  return new Date().toLocaleString('en-CA', { timeZone: 'Asia/Phnom_Penh' }).split(',')[0];
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const { month, year } = req.query;
@@ -15,7 +19,7 @@ router.get('/', async (req, res, next) => {
     const personFilter = isAdmin ? '' : ` AND fo.person_id = ${req.user.id}`;
     const personFilterP = isAdmin ? '' : ` AND p.id = ${req.user.id}`;
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = todayKHM();
 
     const [totalResult, paidResult, unpaidResult, dailyResult, personResult, todayResult] = await Promise.all([
       pool.query(
