@@ -30,6 +30,15 @@ app.use(cors({
 app.use(express.json());
 app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', db: 'connected', uptime: process.uptime() });
+  } catch {
+    res.status(503).json({ status: 'error', db: 'disconnected' });
+  }
+});
+
 app.use('/api/auth', authRouter);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

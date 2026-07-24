@@ -199,7 +199,7 @@ xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
 - Root Directory: `backend`
 - Build: `npm install`
 - Start: `node src/index.js`
-- Keep awake: [cron-job.org](https://cron-job.org) ping every 14 minutes
+- Keep awake: [cron-job.org](https://cron-job.org) ping every 14 minutes to `/api/health`
 
 ### Database (Neon.tech)
 - Free PostgreSQL with connection string
