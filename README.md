@@ -59,10 +59,10 @@ Telegram Bot (Payment/Deletion Approvals)
 
 | Name | Password | Role |
 |------|----------|------|
-| Madero | password123 | Admin |
-| All others | password123 | User |
+| Madero | `****` | Admin |
+| All others | `****` | User |
 
-All 19 persons have password `password123`.
+All 19 persons share the same default password (see project admin).
 
 ## Notification Flow
 
