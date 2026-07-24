@@ -1,0 +1,294 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { api } from '../api/client';
+import DateSelector from '../components/DateSelector';
+import OrderTable from '../components/OrderTable';
+import OrderForm from '../components/OrderForm';
+import useSSE from '../hooks/useSSE';
+
+export default function DailyOrders() {
+  const user = api.getCurrentUser();
+  const isAdmin = user?.role === 'admin';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
+  const [date, setDate] = useState(initialDate);
+  const [orders, setOrders] = useState([]);
+  const [persons, setPersons] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [payModal, setPayModal] = useState({ show: false, orderId: null, datetime: '' });
+  const [deleteModal, setDeleteModal] = useState({ show: false, orderId: null });
+  const [approveDeletionModal, setApproveDeletionModal] = useState({ show: false, orderId: null });
+  const [cancelDeletionModal, setCancelDeletionModal] = useState({ show: false, orderId: null });
+
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.getOrders({ date });
+      setOrders(data.orders || data);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  }, [date]);
+
+  const fetchPersons = async () => {
+    try {
+      const data = await api.getPersons();
+      setPersons(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    fetchPersons();
+  }, []);
+
+  useSSE((event, data) => {
+    if (event === 'order_created' || event === 'order_updated' || event === 'order_deleted') {
+      fetchOrders();
+    } else if (event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected') {
+      fetchOrders();
+    } else if (event === 'deletion_requested' || event === 'deletion_cancelled' || event === 'deletion_approved') {
+      fetchOrders();
+    }
+  });
+
+  const handleCreate = async (data) => {
+    try {
+      await api.createOrder(data);
+      setShowForm(false);
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleUpdate = async (data) => {
+    try {
+      await api.updateOrder(editingOrder.id, data);
+      setEditingOrder(null);
+      setShowForm(false);
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const openPayModal = (id) => {
+    const now = new Date();
+    const dt = now.getFullYear() + '-' +
+      String(now.getMonth() + 1).padStart(2, '0') + '-' +
+      String(now.getDate()).padStart(2, '0') + 'T' +
+      String(now.getHours()).padStart(2, '0') + ':' +
+      String(now.getMinutes()).padStart(2, '0');
+    setPayModal({ show: true, orderId: id, datetime: dt });
+  };
+
+  const confirmPay = async () => {
+    try {
+      await api.payOrder(payModal.orderId, { transaction_date: payModal.datetime });
+      setPayModal({ show: false, orderId: null, datetime: '' });
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setDeleteModal({ show: true, orderId: id });
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await api.deleteOrder(deleteModal.orderId);
+      setDeleteModal({ show: false, orderId: null });
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await api.approveOrder(id);
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!confirm('Reject this payment?')) return;
+    try {
+      await api.rejectOrder(id);
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleApproveDeletion = async (id) => {
+    setApproveDeletionModal({ show: true, orderId: id });
+  };
+
+  const confirmApproveDeletion = async () => {
+    try {
+      await api.approveDeletion(approveDeletionModal.orderId);
+      setApproveDeletionModal({ show: false, orderId: null });
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleCancelDeletion = async (id) => {
+    setCancelDeletionModal({ show: true, orderId: id });
+  };
+
+  const confirmCancelDeletion = async () => {
+    try {
+      await api.cancelDeletion(cancelDeletionModal.orderId);
+      setCancelDeletionModal({ show: false, orderId: null });
+      fetchOrders();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleEdit = (order) => {
+    setEditingOrder(order);
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingOrder(null);
+  };
+
+  const handleDateChange = (newDate) => {
+    setDate(newDate);
+    setSearchParams({ date: newDate });
+  };
+
+  const totalPrice = orders.reduce((sum, o) => sum + Number(o.price), 0);
+  const totalPaid = orders.reduce((sum, o) => sum + Number(o.paid_amount || 0), 0);
+
+  return (
+    <div>
+      <div className="page-header">
+        <h1>Daily Orders</h1>
+        <DateSelector date={date} onChange={handleDateChange} />
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="daily-summary">
+            <div>Orders: <span>{orders.length}</span></div>
+            <div>Total: <span>{totalPrice.toLocaleString()} R</span></div>
+            <div>Paid: <span>{totalPaid.toLocaleString()} R</span></div>
+            <div>Unpaid: <span style={{ color: '#dc2626' }}>{(totalPrice - totalPaid).toLocaleString()} R</span></div>
+          </div>
+          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingOrder(null); }}>
+            {showForm ? 'Close' : '+ New Order'}
+          </button>
+        </div>
+
+        {showForm && (
+          <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: '8px', marginBottom: '1rem' }}>
+            <OrderForm
+              persons={persons}
+              onSubmit={editingOrder ? handleUpdate : handleCreate}
+              initialData={editingOrder || { order_date: date, person_id: isAdmin ? '' : user.id }}
+              onCancel={handleCancel}
+              isAdmin={isAdmin}
+              isEditing={!!editingOrder}
+            />
+          </div>
+        )}
+
+        {loading ? (
+          <div className="empty-state">Loading...</div>
+        ) : (
+          <OrderTable
+            orders={orders}
+            onPay={openPayModal}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onApproveDeletion={handleApproveDeletion}
+            onCancelDeletion={handleCancelDeletion}
+            isAdmin={isAdmin}
+          />
+        )}
+      </div>
+
+      {payModal.show && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ width: '90%', maxWidth: '400px', margin: 0 }}>
+            <h2 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Confirm Payment</h2>
+            <div className="form-group">
+              <label>Transaction Date & Time</label>
+              <input
+                type="datetime-local"
+                value={payModal.datetime}
+                onChange={(e) => setPayModal({ ...payModal, datetime: e.target.value })}
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+              <button className="btn btn-ghost" onClick={() => setPayModal({ show: false, orderId: null, datetime: '' })}>Cancel</button>
+              <button className="btn btn-success" onClick={confirmPay}>Confirm Pay</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModal.show && (
+        <div className="modal-overlay" onClick={() => setDeleteModal({ show: false, orderId: null })}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Order</h3>
+            <p style={{ margin: '1rem 0' }}>Are you sure you want to delete this order?</p>
+            <div className="form-actions">
+              <button className="btn btn-ghost" onClick={() => setDeleteModal({ show: false, orderId: null })}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approveDeletionModal.show && (
+        <div className="modal-overlay" onClick={() => setApproveDeletionModal({ show: false, orderId: null })}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Approve Deletion</h3>
+            <p style={{ margin: '1rem 0' }}>Are you sure you want to approve this deletion? The order will be permanently deleted.</p>
+            <div className="form-actions">
+              <button className="btn btn-ghost" onClick={() => setApproveDeletionModal({ show: false, orderId: null })}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmApproveDeletion}>Approve</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelDeletionModal.show && (
+        <div className="modal-overlay" onClick={() => setCancelDeletionModal({ show: false, orderId: null })}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Cancel Deletion Request</h3>
+            <p style={{ margin: '1rem 0' }}>Are you sure you want to cancel this deletion request?</p>
+            <div className="form-actions">
+              <button className="btn btn-ghost" onClick={() => setCancelDeletionModal({ show: false, orderId: null })}>No, Keep It</button>
+              <button className="btn btn-warning" onClick={confirmCancelDeletion}>Yes, Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

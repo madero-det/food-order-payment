@@ -1,0 +1,9 @@
+{
+  "appId": "com.foodorderpayment.app",
+  "appName": "Food Order Payment",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http",
+    "iosScheme": "http"
+  }
+}

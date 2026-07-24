@@ -1,0 +1,173 @@
+import { getUploadsBase } from '../api/client';
+
+function getInitials(name) {
+  return name ? name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
+}
+
+export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove, onReject, onApproveDeletion, onCancelDeletion, isAdmin }) {
+  if (orders.length === 0) {
+    return <div className="empty-state">No orders for this date</div>;
+  }
+
+  const formatRiel = (amount) =>
+    amount != null ? `${Number(amount).toLocaleString()} R` : '-';
+
+  const formatDate = (dt) => {
+    if (!dt) return '-';
+    const s = String(dt).replace(' ', 'T');
+    const parts = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    if (!parts) return dt;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthName = months[Number(parts[2]) - 1];
+    if (!parts[4]) return `${monthName} ${Number(parts[3])}, ${parts[1]}`;
+    const h = Number(parts[4]);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${monthName} ${Number(parts[3])}, ${parts[1]} ${h12}:${parts[5]} ${ampm}`;
+  };
+
+  const renderBadges = (order) => (
+    <>
+      {order.paid_amount != null ? (
+        order.payment_status === 'pending' ? (
+          <span className="badge badge-pending">Pending</span>
+        ) : order.payment_status === 'rejected' ? (
+          <span className="badge badge-rejected">Rejected</span>
+        ) : (
+          <span className="badge badge-paid">Paid</span>
+        )
+      ) : (
+        <span className="badge badge-unpaid">Unpaid</span>
+      )}
+      {order.deletion_status === 'pending' && (
+        <span className="badge badge-pending" style={{ marginLeft: '0.25rem' }}>Delete Pending</span>
+      )}
+    </>
+  );
+
+  const renderActions = (order) => (
+    <div className="table-actions" style={{ gap: '0.25rem' }}>
+      {order.paid_amount == null && (
+        <button className="btn btn-success btn-sm" title="Pay" onClick={() => onPay(order.id)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      )}
+      {isAdmin && order.payment_status === 'pending' && (
+        <div className="btn-group">
+          <button className="btn btn-success btn-sm" title="Approve" onClick={() => onApprove(order.id)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button className="btn btn-danger btn-sm" title="Reject" onClick={() => onReject(order.id)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      )}
+      <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => onEdit(order)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+      </button>
+      {order.deletion_status === 'pending' ? (
+        isAdmin ? (
+          <div className="btn-group">
+            <button className="btn btn-danger btn-sm" title="Approve Deletion" onClick={() => onApproveDeletion(order.id)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button className="btn btn-warning btn-sm" title="Cancel Deletion" onClick={() => onCancelDeletion(order.id)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        ) : (
+          <button className="btn btn-ghost btn-sm" title="Delete Pending" disabled style={{ opacity: 0.5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+        )
+      ) : (
+        <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => onDelete(order.id)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+    {/* Desktop table */}
+    <div className="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Price</th>
+          <th className="hide-mobile">Paid</th>
+          <th className="hide-mobile">Transaction Date</th>
+          <th>Status</th>
+          <th className="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {orders.map((order, idx) => (
+          <tr key={order.id}>
+            <td>{idx + 1}</td>
+            <td>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {order.person_avatar ? (
+                  <img src={`${getUploadsBase()}/${order.person_avatar}`} alt="" className="avatar" style={{ width: 26, height: 26 }} />
+                ) : (
+                  <div className="avatar avatar-initials" style={{ width: 26, height: 26, fontSize: '0.6rem' }}>
+                    {getInitials(order.person_name)}
+                  </div>
+                )}
+                <strong>{order.person_name}</strong>
+              </div>
+            </td>
+            <td>{formatRiel(order.price)}</td>
+            <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
+            <td className="hide-mobile">{formatDate(order.transaction_date)}</td>
+            <td>{renderBadges(order)}</td>
+            <td>{renderActions(order)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+    </div>
+
+    {/* Mobile cards */}
+    <div className="mobile-cards">
+      {orders.map((order, idx) => (
+        <div className="order-card" key={order.id}>
+          <div className="order-card-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {order.person_avatar ? (
+                <img src={`${getUploadsBase()}/${order.person_avatar}`} alt="" className="avatar" style={{ width: 28, height: 28 }} />
+              ) : (
+                <div className="avatar avatar-initials" style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
+                  {getInitials(order.person_name)}
+                </div>
+              )}
+              <span className="order-date">{order.person_name}</span>
+            </div>
+            {renderBadges(order)}
+          </div>
+          <div className="order-card-body">
+            <div className="order-card-row">
+              <span className="label">Price</span>
+              <span className="value">{formatRiel(order.price)}</span>
+            </div>
+            <div className="order-card-row">
+              <span className="label">Paid</span>
+              <span className="value">{formatRiel(order.paid_amount)}</span>
+            </div>
+            <div className="order-card-row">
+              <span className="label">Transaction</span>
+              <span className="value">{formatDate(order.transaction_date)}</span>
+            </div>
+          </div>
+          <div className="order-card-actions">
+            {renderActions(order)}
+          </div>
+        </div>
+      ))}
+    </div>
+    </>
+  );
+}

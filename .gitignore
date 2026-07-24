@@ -1,0 +1,10 @@
+node_modules/
+dist/
+android/
+ios/
+*.log
+.env
+npm-debug.log*
+.DS_Store
+*.apk
+*.ipa
