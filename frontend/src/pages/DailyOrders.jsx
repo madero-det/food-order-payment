@@ -101,9 +101,22 @@ export default function DailyOrders() {
 
   const handleCreate = async (data) => {
     try {
-      await api.createOrder(data);
+      const result = await api.createOrder(data);
       setShowForm(false);
-      fetchOrders();
+      if (result.order_date === date) {
+        setOrders(prev => [...prev, {
+          id: result.id,
+          order_date: result.order_date,
+          price: Number(result.price),
+          paid_amount: result.paid_amount != null ? Number(result.paid_amount) : null,
+          transaction_date: result.transaction_date,
+          payment_status: result.payment_status,
+          deletion_status: result.deletion_status,
+          person_id: result.person_id,
+          person_name: result.person_name,
+          person_avatar: null,
+        }]);
+      }
     } catch (err) {
       alert(err.message);
     }
@@ -111,10 +124,19 @@ export default function DailyOrders() {
 
   const handleUpdate = async (data) => {
     try {
-      await api.updateOrder(editingOrder.id, data);
+      const result = await api.updateOrder(editingOrder.id, data);
       setEditingOrder(null);
       setShowForm(false);
-      fetchOrders();
+      setOrders(prev => prev.map(o => o.id === result.id ? {
+        ...o,
+        price: Number(result.price ?? o.price),
+        paid_amount: result.paid_amount !== undefined ? (result.paid_amount != null ? Number(result.paid_amount) : null) : o.paid_amount,
+        transaction_date: result.transaction_date !== undefined ? result.transaction_date : o.transaction_date,
+        payment_status: result.payment_status !== undefined ? result.payment_status : o.payment_status,
+        deletion_status: result.deletion_status !== undefined ? result.deletion_status : o.deletion_status,
+        person_id: result.person_id ?? o.person_id,
+        person_name: result.person_name ?? o.person_name,
+      } : o));
     } catch (err) {
       alert(err.message);
     }
@@ -132,9 +154,14 @@ export default function DailyOrders() {
 
   const confirmPay = async () => {
     try {
-      await api.payOrder(payModal.orderId, { transaction_date: payModal.datetime });
+      const result = await api.payOrder(payModal.orderId, { transaction_date: payModal.datetime });
       setPayModal({ show: false, orderId: null, datetime: '' });
-      fetchOrders();
+      setOrders(prev => prev.map(o => o.id === result.id ? {
+        ...o,
+        paid_amount: result.paid_amount != null ? Number(result.paid_amount) : null,
+        transaction_date: result.transaction_date,
+        payment_status: result.payment_status,
+      } : o));
     } catch (err) {
       alert(err.message);
     }
@@ -148,7 +175,7 @@ export default function DailyOrders() {
     try {
       await api.deleteOrder(deleteModal.orderId);
       setDeleteModal({ show: false, orderId: null });
-      fetchOrders();
+      setOrders(prev => prev.filter(o => o.id !== deleteModal.orderId));
     } catch (err) {
       alert(err.message);
     }
@@ -156,8 +183,11 @@ export default function DailyOrders() {
 
   const handleApprove = async (id) => {
     try {
-      await api.approveOrder(id);
-      fetchOrders();
+      const result = await api.approveOrder(id);
+      setOrders(prev => prev.map(o => o.id === result.id ? {
+        ...o,
+        payment_status: 'approved',
+      } : o));
     } catch (err) {
       alert(err.message);
     }
@@ -171,7 +201,12 @@ export default function DailyOrders() {
     try {
       await api.rejectOrder(rejectModal.orderId);
       setRejectModal({ show: false, orderId: null });
-      fetchOrders();
+      setOrders(prev => prev.map(o => o.id === rejectModal.orderId ? {
+        ...o,
+        paid_amount: null,
+        transaction_date: null,
+        payment_status: 'rejected',
+      } : o));
     } catch (err) {
       alert(err.message);
     }
@@ -185,7 +220,7 @@ export default function DailyOrders() {
     try {
       await api.approveDeletion(approveDeletionModal.orderId);
       setApproveDeletionModal({ show: false, orderId: null });
-      fetchOrders();
+      setOrders(prev => prev.filter(o => o.id !== approveDeletionModal.orderId));
     } catch (err) {
       alert(err.message);
     }
@@ -199,7 +234,10 @@ export default function DailyOrders() {
     try {
       await api.cancelDeletion(cancelDeletionModal.orderId);
       setCancelDeletionModal({ show: false, orderId: null });
-      fetchOrders();
+      setOrders(prev => prev.map(o => o.id === cancelDeletionModal.orderId ? {
+        ...o,
+        deletion_status: null,
+      } : o));
     } catch (err) {
       alert(err.message);
     }
