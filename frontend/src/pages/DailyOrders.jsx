@@ -185,9 +185,16 @@ export default function DailyOrders() {
 
   const confirmDelete = async () => {
     try {
-      await api.deleteOrder(deleteModal.orderId);
+      const result = await api.deleteOrder(deleteModal.orderId);
       setDeleteModal({ show: false, orderId: null });
-      setOrders(prev => prev.filter(o => o.id !== deleteModal.orderId));
+      if (isAdmin || result.deletion_status !== 'pending') {
+        setOrders(prev => prev.filter(o => o.id !== deleteModal.orderId));
+      } else {
+        setOrders(prev => prev.map(o => o.id === deleteModal.orderId ? {
+          ...o,
+          deletion_status: 'pending',
+        } : o));
+      }
     } catch (err) {
       alert(err.message);
     }
