@@ -13,7 +13,7 @@ router.post('/login', async (req, res, next) => {
     }
 
     const result = await pool.query(
-      'SELECT id, name, password_hash, role, profile_image FROM persons WHERE LOWER(name) = LOWER($1)',
+      'SELECT id, name, password_hash, role, profile_image, telegram_chat_id FROM persons WHERE LOWER(name) = LOWER($1)',
       [name.trim()]
     );
 
@@ -40,7 +40,7 @@ router.post('/login', async (req, res, next) => {
 
     res.json({
       token,
-      user: { id: person.id, name: person.name, role: person.role, profile_image: person.profile_image || null },
+      user: { id: person.id, name: person.name, role: person.role, profile_image: person.profile_image || null, telegram_connected: !!person.telegram_chat_id },
     });
   } catch (err) {
     next(err);

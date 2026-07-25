@@ -57,6 +57,7 @@ export const api = {
   createPerson: (data) => request('/persons', { method: 'POST', body: JSON.stringify(data) }),
   updatePerson: (id, data) => request(`/persons/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePerson: (id) => request(`/persons/${id}`, { method: 'DELETE' }),
+  disconnectTelegram: (id) => request(`/persons/${id}/telegram`, { method: 'DELETE' }),
 
   getDashboard: (params = {}) => {
     const qs = new URLSearchParams(params).toString();

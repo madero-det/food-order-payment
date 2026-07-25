@@ -6,9 +6,37 @@ dotenv.config();
 
 const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const API_BASE = process.env.API_BASE_URL || 'http://localhost:3001';
 
-export const sendPaymentNotification = async ({ personName, price, paidAmount, orderDate, transactionDate, orderId, paymentStatus }) => {
+function fmtDate(dt) {
+  if (!dt) return '-';
+  return String(dt).substring(0, 10);
+}
+
+function fmtDateTime(dt) {
+  if (!dt) return '-';
+  const s = String(dt).replace(' ', 'T');
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return dt;
+  const h = Number(m[4]);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${m[1]}-${m[2]}-${m[3]} ${h12}:${m[5]} ${ampm}`;
+}
+
+async function notifyUserTelegram(pool, personId, text) {
+  try {
+    const r = await pool.query('SELECT telegram_chat_id FROM persons WHERE id = $1', [personId]);
+    if (!r.rows[0]?.telegram_chat_id) return;
+    await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: r.rows[0].telegram_chat_id, text, parse_mode: 'Markdown' }),
+    });
+  } catch (err) {
+    console.error('User DM error:', err.message);
+  }
+}
+
+export const sendPaymentNotification = async ({ personName, price, paidAmount, orderDate, transactionDate, orderId, paymentStatus, personId, pool }) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -17,34 +45,16 @@ export const sendPaymentNotification = async ({ personName, price, paidAmount, o
     return;
   }
 
-  const formatDate = (dt) => {
-    if (!dt) return '-';
-    const s = String(dt).replace(' ', 'T');
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    return m ? `${m[1]}-${m[2]}-${m[3]}` : dt;
-  };
-
-  const formatDateTime = (dt) => {
-    if (!dt) return '-';
-    const s = String(dt).replace(' ', 'T');
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-    if (!m) return dt;
-    const h = Number(m[4]);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12 = h % 12 || 12;
-    return `${m[1]}-${m[2]}-${m[3]} ${h12}:${m[5]} ${ampm}`;
-  };
-
-  const statusEmoji = paymentStatus === 'pending' ? '⏳' : '✅';
+  const statusEmoji = paymentStatus === 'pending' ? '\u23F3' : '\u2705';
   const statusText = paymentStatus === 'pending' ? 'PENDING APPROVAL' : 'APPROVED';
 
   const message = [
     `${statusEmoji} *Payment ${statusText}*`,
     '',
-    `👤 *Person:* ${personName}`,
-    `💰 *Amount:* ${Number(paidAmount).toLocaleString()} R`,
-    `🍽️ *Order Date:* ${formatDate(orderDate)}`,
-    `📅 *Transaction Date:* ${formatDateTime(transactionDate)}`,
+    `\u{1F464} *Person:* ${personName}`,
+    `\u{1F4B0} *Amount:* ${Number(paidAmount).toLocaleString()} R`,
+    `\u{1F37D}\uFE0F *Order Date:* ${fmtDate(orderDate)}`,
+    `\u{1F4C5} *Transaction Date:* ${fmtDateTime(transactionDate)}`,
   ].join('\n');
 
   const payload = {
@@ -57,54 +67,14 @@ export const sendPaymentNotification = async ({ personName, price, paidAmount, o
     payload.reply_markup = {
       inline_keyboard: [
         [
-          { text: '✅ Approve', callback_data: `approve:${orderId}` },
-          { text: '❌ Reject', callback_data: `reject:${orderId}` },
+          { text: '\u2705 Approve', callback_data: `approve:${orderId}` },
+          { text: '\u274C Reject', callback_data: `reject:${orderId}` },
         ],
       ],
-};
-
-export const sendUnpaidReminder = async (pool) => {
-  try {
-    const now = new Date();
-    const khh = parseInt(now.toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh', hour: '2-digit', hour12: false }));
-    if (khh !== 20) return;
-
-    const today = new Date().toLocaleString('en-CA', { timeZone: 'Asia/Phnom_Penh' }).split(',')[0];
-    const result = await pool.query(
-      `SELECT fo.id, fo.price, p.name as person_name
-       FROM food_orders fo
-       JOIN persons p ON fo.person_id = p.id
-       WHERE fo.order_date = $1 AND fo.paid_amount IS NULL
-       ORDER BY p.name`,
-      [today]
-    );
-
-    if (result.rows.length === 0) return;
-
-    const lines = result.rows.map((o, i) =>
-      `  ${i + 1}. ${o.person_name} — ${Number(o.price).toLocaleString()} R`
-    ).join('\n');
-
-    const total = result.rows.reduce((s, o) => s + Number(o.price), 0);
-
-    const msg = [
-      `⚠️ *Unpaid Orders Today* (${today})`,
-      '',
-      `${result.rows.length} orders — ${total.toLocaleString()} R`,
-      '',
-      lines,
-    ].join('\n');
-
-    await fetch(`${TELEGRAM_API}/sendMessage`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' }),
-    });
-  } catch (err) {
-    console.error('Unpaid reminder error:', err.message);
-  }
-};
+    };
   }
 
+  let result = null;
   try {
     const url = `${TELEGRAM_API}/sendMessage`;
     const res = await fetch(url, {
@@ -114,14 +84,26 @@ export const sendUnpaidReminder = async (pool) => {
     });
     if (!res.ok) {
       console.error('Telegram send failed:', await res.text());
-      return null;
+    } else {
+      const data = await res.json();
+      result = { chatId: data.result.chat.id, messageId: data.result.message_id };
     }
-    const result = await res.json();
-    return { chatId: result.result.chat.id, messageId: result.result.message_id };
   } catch (err) {
     console.error('Telegram error:', err.message);
-    return null;
   }
+
+  if (personId && pool && paymentStatus === 'approved') {
+    const userMsg = [
+      `\u2705 *Payment Approved!*`,
+      '',
+      `Your payment for ${Number(paidAmount).toLocaleString()} R has been approved.`,
+      `\u{1F37D}\uFE0F *Order:* ${fmtDate(orderDate)}`,
+      `\u{1F4C5} *Txn:* ${fmtDateTime(transactionDate)}`,
+    ].join('\n');
+    notifyUserTelegram(pool, personId, userMsg).catch(() => {});
+  }
+
+  return result;
 };
 
 export const answerCallbackQuery = async (callbackQueryId, text) => {
@@ -148,7 +130,7 @@ export const editMessageText = async (chatId, messageId, text, extra = {}) => {
   }
 };
 
-export const sendDeletionNotification = async ({ orderId, personName, price, orderDate, requestedBy }) => {
+export const sendDeletionNotification = async ({ orderId, personName, price, orderDate, requestedBy, personId, pool }) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -157,20 +139,13 @@ export const sendDeletionNotification = async ({ orderId, personName, price, ord
     return;
   }
 
-  const formatDate = (dt) => {
-    if (!dt) return '-';
-    const s = String(dt).replace(' ', 'T');
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    return m ? `${m[1]}-${m[2]}-${m[3]}` : dt;
-  };
-
   const message = [
-    '🗑️ *DELETE REQUEST*',
+    '\u{1F5D1}\uFE0F *DELETE REQUEST*',
     '',
-    `👤 *Person:* ${personName}`,
-    `💰 *Amount:* ${Number(price).toLocaleString()} R`,
-    `🍽️ *Order Date:* ${formatDate(orderDate)}`,
-    `📝 *Requested by:* ${requestedBy}`,
+    `\u{1F464} *Person:* ${personName}`,
+    `\u{1F4B0} *Amount:* ${Number(price).toLocaleString()} R`,
+    `\u{1F37D}\uFE0F *Order Date:* ${fmtDate(orderDate)}`,
+    `\u{1F4DD} *Requested by:* ${requestedBy}`,
   ].join('\n');
 
   const payload = {
@@ -180,13 +155,14 @@ export const sendDeletionNotification = async ({ orderId, personName, price, ord
     reply_markup: {
       inline_keyboard: [
         [
-          { text: '✅ Approve Delete', callback_data: `delete_approve:${orderId}` },
-          { text: '❌ Cancel', callback_data: `delete_reject:${orderId}` },
+          { text: '\u2705 Approve Delete', callback_data: `delete_approve:${orderId}` },
+          { text: '\u274C Cancel', callback_data: `delete_reject:${orderId}` },
         ],
       ],
     },
   };
 
+  let result = null;
   try {
     const url = `${TELEGRAM_API}/sendMessage`;
     const res = await fetch(url, {
@@ -196,13 +172,65 @@ export const sendDeletionNotification = async ({ orderId, personName, price, ord
     });
     if (!res.ok) {
       console.error('Telegram send failed:', await res.text());
-      return null;
+    } else {
+      const data = await res.json();
+      result = { chatId: data.result.chat.id, messageId: data.result.message_id };
     }
-    const result = await res.json();
-    return { chatId: result.result.chat.id, messageId: result.result.message_id };
   } catch (err) {
     console.error('Telegram error:', err.message);
-    return null;
+  }
+
+  if (personId && pool) {
+    const userMsg = [
+      '\u{1F5D1}\uFE0F *Delete Request Sent*',
+      '',
+      `Your delete request for order #${orderId} (${Number(price).toLocaleString()} R) has been sent for approval.`,
+      `\u{1F37D}\uFE0F *Order:* ${fmtDate(orderDate)}`,
+    ].join('\n');
+    notifyUserTelegram(pool, personId, userMsg).catch(() => {});
+  }
+
+  return result;
+};
+
+export const sendUnpaidReminder = async (pool) => {
+  try {
+    const now = new Date();
+    const khh = parseInt(now.toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh', hour: '2-digit', hour12: false }));
+    if (khh !== 20) return;
+
+    const today = new Date().toLocaleString('en-CA', { timeZone: 'Asia/Phnom_Penh' }).split(',')[0];
+    const result = await pool.query(
+      `SELECT fo.id, fo.price, p.name as person_name
+       FROM food_orders fo
+       JOIN persons p ON fo.person_id = p.id
+       WHERE fo.order_date = $1 AND fo.paid_amount IS NULL
+       ORDER BY p.name`,
+      [today]
+    );
+
+    if (result.rows.length === 0) return;
+
+    const lines = result.rows.map((o, i) =>
+      `  ${i + 1}. ${o.person_name} \u2014 ${Number(o.price).toLocaleString()} R`
+    ).join('\n');
+
+    const total = result.rows.reduce((s, o) => s + Number(o.price), 0);
+
+    const msg = [
+      `\u26A0\uFE0F *Unpaid Orders Today* (${today})`,
+      '',
+      `${result.rows.length} orders \u2014 ${total.toLocaleString()} R`,
+      '',
+      lines,
+    ].join('\n');
+
+    await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' }),
+    });
+  } catch (err) {
+    console.error('Unpaid reminder error:', err.message);
   }
 };
 
@@ -221,6 +249,8 @@ export const startTelegramPolling = (pool) => {
           pollingOffset = update.update_id + 1;
           if (update.callback_query) {
             await handleCallbackQuery(update.callback_query, pool);
+          } else if (update.message && update.message.text) {
+            await handleTextMessage(update.message, pool);
           }
         }
       }
@@ -230,9 +260,78 @@ export const startTelegramPolling = (pool) => {
     setTimeout(poll, 1000);
   };
 
-  console.log('Starting Telegram polling for payment approvals...');
+  console.log('Starting Telegram polling...');
   poll();
 };
+
+async function handleTextMessage(msg, pool) {
+  const { text, chat, from } = msg;
+  const chatId = String(chat.id);
+  const userId = from?.id;
+
+  if (!text) return;
+
+  const t = text.trim();
+
+  if (t === '/start') {
+    await sendMessage(chatId, 'Welcome! Send your full name to connect your account.\n\nExample: *Madero*\n\nCommands:\n/status - Check connection\n/disconnect - Remove connection');
+    return;
+  }
+
+  if (t === '/status') {
+    const r = await pool.query('SELECT name FROM persons WHERE telegram_chat_id = $1', [chatId]);
+    if (r.rows[0]) {
+      await sendMessage(chatId, `\u2705 Connected as: *${r.rows[0].name}*`);
+    } else {
+      await sendMessage(chatId, '\u26AA Not connected. Send your name to link your account.');
+    }
+    return;
+  }
+
+  if (t === '/disconnect') {
+    await pool.query('UPDATE persons SET telegram_chat_id = NULL WHERE telegram_chat_id = $1', [chatId]);
+    await sendMessage(chatId, '\u2705 Disconnected. You will no longer receive DMs.');
+    return;
+  }
+
+  if (t.startsWith('/')) return;
+
+  const nameMatch = await pool.query(
+    'SELECT id, name FROM persons WHERE LOWER(name) = LOWER($1)',
+    [t]
+  );
+
+  if (nameMatch.rows.length === 0) {
+    await sendMessage(chatId, `\u274C Name "*${t}*" not found. Please check and try again.`);
+    return;
+  }
+
+  if (nameMatch.rows.length > 1) {
+    const names = nameMatch.rows.map(r => r.name).join(', ');
+    await sendMessage(chatId, `\u26A0\uFE0F Multiple matches: ${names}. Please send the exact name.`);
+    return;
+  }
+
+  const person = nameMatch.rows[0];
+  const existing = await pool.query('SELECT id FROM persons WHERE telegram_chat_id = $1 AND id != $2', [chatId, person.id]);
+  if (existing.rows.length > 0) {
+    await pool.query('UPDATE persons SET telegram_chat_id = NULL WHERE telegram_chat_id = $1', [chatId]);
+  }
+
+  await pool.query('UPDATE persons SET telegram_chat_id = $1 WHERE id = $2', [chatId, person.id]);
+  await sendMessage(chatId, `\u2705 Connected as: *${person.name}*\\!\n\nYou will now receive payment and deletion notifications directly.`);
+}
+
+async function sendMessage(chatId, text) {
+  try {
+    await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
+    });
+  } catch (err) {
+    console.error('sendMessage error:', err.message);
+  }
+}
 
 const handleCallbackQuery = async (query, pool) => {
   const { id, data, message } = query;
@@ -255,22 +354,29 @@ const handleCallbackQuery = async (query, pool) => {
       );
       const order = result.rows[0];
       const newText = [
-        '✅ *Payment APPROVED*',
+        '\u2705 *Payment APPROVED*',
         '',
-        `👤 *Person:* ${order.person_name}`,
-        `💰 *Amount:* ${Number(order.paid_amount).toLocaleString()} R`,
-        `🍽️ *Order Date:* ${order.order_date}`,
-        `📅 *Transaction Date:* ${order.transaction_date}`,
+        `\u{1F464} *Person:* ${order.person_name}`,
+        `\u{1F4B0} *Amount:* ${Number(order.paid_amount).toLocaleString()} R`,
+        `\u{1F37D}\uFE0F *Order Date:* ${order.order_date}`,
+        `\u{1F4C5} *Transaction Date:* ${order.transaction_date}`,
         '',
         `_Approved at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Payment for ${order.person_name} approved!`);
 
-      broadcast('payment_approved', {
-        ...order,
-        triggeredBy: 'telegram',
-      });
+      broadcast('payment_approved', { ...order, triggeredBy: 'telegram' });
+
+      const userMsg = [
+        '\u2705 *Payment Approved!*',
+        '',
+        `Your payment for ${Number(order.paid_amount || order.price).toLocaleString()} R has been approved.`,
+        `\u{1F37D}\uFE0F *Order:* ${fmtDate(order.order_date)}`,
+        `\u{1F4C5} *Txn:* ${fmtDateTime(order.transaction_date)}`,
+      ].join('\n');
+      notifyUserTelegram(pool, order.person_id, userMsg).catch(() => {});
+
     } else if (action === 'reject') {
       await pool.query(
         `UPDATE food_orders SET paid_amount = NULL, transaction_date = NULL, payment_status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
@@ -282,21 +388,27 @@ const handleCallbackQuery = async (query, pool) => {
       );
       const order = result.rows[0];
       const newText = [
-        '❌ *Payment REJECTED*',
+        '\u274C *Payment REJECTED*',
         '',
-        `👤 *Person:* ${order.person_name}`,
-        `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
-        `🍽️ *Order Date:* ${order.order_date}`,
+        `\u{1F464} *Person:* ${order.person_name}`,
+        `\u{1F4B0} *Amount:* ${Number(order.price).toLocaleString()} R`,
+        `\u{1F37D}\uFE0F *Order Date:* ${order.order_date}`,
         '',
         `_Rejected at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Payment for ${order.person_name} rejected!`);
 
-      broadcast('payment_rejected', {
-        ...order,
-        triggeredBy: 'telegram',
-      });
+      broadcast('payment_rejected', { ...order, triggeredBy: 'telegram' });
+
+      const userMsg = [
+        '\u274C *Payment Rejected*',
+        '',
+        `Your payment for ${Number(order.price).toLocaleString()} R has been rejected.`,
+        `\u{1F37D}\uFE0F *Order:* ${fmtDate(order.order_date)}`,
+      ].join('\n');
+      notifyUserTelegram(pool, order.person_id, userMsg).catch(() => {});
+
     } else if (action === 'delete_approve') {
       const result = await pool.query(
         `SELECT fo.*, p.name as person_name FROM food_orders fo JOIN persons p ON fo.person_id = p.id WHERE fo.id = $1`,
@@ -309,11 +421,11 @@ const handleCallbackQuery = async (query, pool) => {
       const order = result.rows[0];
       await pool.query('DELETE FROM food_orders WHERE id = $1', [orderId]);
       const newText = [
-        '🗑️ *Order DELETED*',
+        '\u{1F5D1}\uFE0F *Order DELETED*',
         '',
-        `👤 *Person:* ${order.person_name}`,
-        `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
-        `🍽️ *Order Date:* ${order.order_date}`,
+        `\u{1F464} *Person:* ${order.person_name}`,
+        `\u{1F4B0} *Amount:* ${Number(order.price).toLocaleString()} R`,
+        `\u{1F37D}\uFE0F *Order Date:* ${order.order_date}`,
         '',
         `_Deleted at ${khmNow()}_`,
       ].join('\n');
@@ -321,12 +433,17 @@ const handleCallbackQuery = async (query, pool) => {
       await answerCallbackQuery(id, `Order for ${order.person_name} deleted!`);
 
       broadcast('deletion_approved', {
-        id: order.id,
-        person_id: order.person_id,
-        price: order.price,
-        order_date: order.order_date,
-        triggeredBy: 'telegram',
+        id: order.id, person_id: order.person_id, price: order.price, order_date: order.order_date, triggeredBy: 'telegram',
       });
+
+      const userMsg = [
+        '\u2705 *Delete Request Approved*',
+        '',
+        `Your delete request for order #${order.id} (${Number(order.price).toLocaleString()} R) has been approved.`,
+        `\u{1F37D}\uFE0F *Order:* ${fmtDate(order.order_date)}`,
+      ].join('\n');
+      notifyUserTelegram(pool, order.person_id, userMsg).catch(() => {});
+
     } else if (action === 'delete_reject') {
       await pool.query(
         `UPDATE food_orders SET deletion_status = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
@@ -338,21 +455,26 @@ const handleCallbackQuery = async (query, pool) => {
       );
       const order = result.rows[0];
       const newText = [
-        '🚫 *Delete REQUEST CANCELLED*',
+        '\u{1F6AB} *Delete REQUEST CANCELLED*',
         '',
-        `👤 *Person:* ${order.person_name}`,
-        `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
-        `🍽️ *Order Date:* ${order.order_date}`,
+        `\u{1F464} *Person:* ${order.person_name}`,
+        `\u{1F4B0} *Amount:* ${Number(order.price).toLocaleString()} R`,
+        `\u{1F37D}\uFE0F *Order Date:* ${order.order_date}`,
         '',
         `_Cancelled at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Delete request for ${order.person_name} cancelled!`);
 
-      broadcast('deletion_cancelled', {
-        ...order,
-        triggeredBy: 'telegram',
-      });
+      broadcast('deletion_cancelled', { ...order, triggeredBy: 'telegram' });
+
+      const userMsg = [
+        '\u{1F6AB} *Delete Request Cancelled*',
+        '',
+        `Your delete request for order #${order.id} (${Number(order.price).toLocaleString()} R) has been cancelled.`,
+        `\u{1F37D}\uFE0F *Order:* ${fmtDate(order.order_date)}`,
+      ].join('\n');
+      notifyUserTelegram(pool, order.person_id, userMsg).catch(() => {});
     }
   } catch (err) {
     console.error('Handle callback error:', err);

@@ -103,6 +103,11 @@ export const initDB = async () => {
       END $$;
 
       DO $$ BEGIN
+        ALTER TABLE persons ADD COLUMN IF NOT EXISTS telegram_chat_id VARCHAR(50);
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      DO $$ BEGIN
         ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS notes TEXT;
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;

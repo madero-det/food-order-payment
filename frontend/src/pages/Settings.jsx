@@ -147,6 +147,43 @@ export default function Settings({ onUserUpdate }) {
         )}
       </div>
 
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <div>
+              <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>Telegram Connection</div>
+              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Receive payment notifications directly on Telegram</div>
+            </div>
+          </div>
+          <span className={`badge ${user?.telegram_connected ? 'badge-paid' : 'badge-unpaid'}`} style={{ fontSize: '0.75rem' }}>
+            {user?.telegram_connected ? 'Connected' : 'Not connected'}
+          </span>
+        </div>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6b7280' }}>
+          Send <strong>/start</strong> to{' '}
+          <a href="https://t.me/food_order_pay_bot" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>@food_order_pay_bot</a>
+          {' '}on Telegram to connect.
+        </p>
+        {user?.telegram_connected && (
+          <button
+            className="btn btn-ghost btn-sm btn-danger"
+            style={{ marginTop: '0.5rem' }}
+            onClick={async () => {
+              try {
+                await api.disconnectTelegram(user.id);
+                const updated = { ...user, telegram_connected: false };
+                if (onUserUpdate) onUserUpdate(updated);
+                const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
+                storage.setItem('user', JSON.stringify(updated));
+              } catch (err) {
+                alert(err.message);
+              }
+            }}
+          >Disconnect</button>
+        )}
+      </div>
+
       <div className="card">
         <form onSubmit={handleSubmit}>
           {error && <div className="alert alert-error">{error}</div>}

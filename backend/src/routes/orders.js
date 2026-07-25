@@ -209,6 +209,8 @@ router.put('/:id', async (req, res, next) => {
           transactionDate: order.transaction_date,
           orderId: order.id,
           paymentStatus: 'pending',
+          personId: order.person_id,
+          pool,
         }).then(async (tgResult) => {
           if (tgResult) {
             await pool.query(
@@ -304,6 +306,8 @@ router.delete('/:id', async (req, res, next) => {
         price: order.price,
         orderDate: order.order_date,
         requestedBy: req.user.name || 'User',
+        personId: order.person_id,
+        pool,
       }).then(async (tgResult) => {
         if (tgResult) {
           await pool.query(
@@ -397,6 +401,8 @@ router.post('/:id/pay', async (req, res, next) => {
       transactionDate: order.transaction_date,
       orderId: order.id,
       paymentStatus: payment_status,
+      personId: order.person_id,
+      pool,
     }).then(async (tgResult) => {
       if (tgResult && payment_status === 'pending') {
         await pool.query(
