@@ -147,12 +147,14 @@ router.post('/', async (req, res, next) => {
       [order_date, person_id, price, paid_amount || null, transaction_date || null]
     );
     const order = result.rows[0];
-    const personResult = await pool.query('SELECT name FROM persons WHERE id = $1', [person_id]);
+    const personResult = await pool.query('SELECT name, profile_image FROM persons WHERE id = $1', [person_id]);
     const personName = personResult.rows[0].name;
+    const personAvatar = personResult.rows[0].profile_image;
 
     broadcast('order_created', {
       ...order,
       person_name: personName,
+      person_avatar: personAvatar,
       triggeredBy: req.user.id,
     });
 

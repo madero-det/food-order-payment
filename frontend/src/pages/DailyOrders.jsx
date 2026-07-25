@@ -68,7 +68,7 @@ export default function DailyOrders() {
           deletion_status: data.deletion_status,
           person_id: data.person_id,
           person_name: data.person_name,
-          person_avatar: null,
+          person_avatar: data.person_avatar || null,
         }]);
       }
     } else if (event === 'order_updated') {
