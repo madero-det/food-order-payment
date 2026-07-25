@@ -149,7 +149,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!user) return;
-    const interval = setInterval(() => refreshUnread(), 30000);
+    const interval = setInterval(() => refreshUnread(), 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [user]);
 
