@@ -146,6 +146,12 @@ function AppContent() {
     if (user) refreshUnread();
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => refreshUnread(), 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const handleLogin = (userData) => {
     setUser(userData);
   };
