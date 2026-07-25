@@ -54,8 +54,9 @@ export default function DailyOrders() {
   }, []);
 
   useSSE((event, data) => {
+    const uid = user?.pid || user?.id;
     if (event === 'order_created') {
-      if (data.order_date === date) {
+      if (data.order_date === date && data.triggeredBy !== uid) {
         setOrders(prev => [...prev, {
           id: data.id,
           order_date: data.order_date,
@@ -70,32 +71,40 @@ export default function DailyOrders() {
         }]);
       }
     } else if (event === 'order_updated') {
-      setOrders(prev => prev.map(o => o.id === data.id ? {
-        ...o,
-        price: Number(data.price ?? o.price),
-        paid_amount: data.paid_amount !== undefined ? (data.paid_amount != null ? Number(data.paid_amount) : null) : o.paid_amount,
-        transaction_date: data.transaction_date !== undefined ? data.transaction_date : o.transaction_date,
-        payment_status: data.payment_status !== undefined ? data.payment_status : o.payment_status,
-        deletion_status: data.deletion_status !== undefined ? data.deletion_status : o.deletion_status,
-        person_id: data.person_id ?? o.person_id,
-        person_name: data.person_name ?? o.person_name,
-      } : o));
+      if (data.triggeredBy !== uid) {
+        setOrders(prev => prev.map(o => o.id === data.id ? {
+          ...o,
+          price: Number(data.price ?? o.price),
+          paid_amount: data.paid_amount !== undefined ? (data.paid_amount != null ? Number(data.paid_amount) : null) : o.paid_amount,
+          transaction_date: data.transaction_date !== undefined ? data.transaction_date : o.transaction_date,
+          payment_status: data.payment_status !== undefined ? data.payment_status : o.payment_status,
+          deletion_status: data.deletion_status !== undefined ? data.deletion_status : o.deletion_status,
+          person_id: data.person_id ?? o.person_id,
+          person_name: data.person_name ?? o.person_name,
+        } : o));
+      }
     } else if (event === 'order_deleted') {
-      setOrders(prev => prev.filter(o => o.id !== data.id));
+      if (data.triggeredBy !== uid) {
+        setOrders(prev => prev.filter(o => o.id !== data.id));
+      }
     } else if (event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected') {
-      setOrders(prev => prev.map(o => o.id === data.id ? {
-        ...o,
-        paid_amount: data.paid_amount != null ? Number(data.paid_amount) : null,
-        transaction_date: data.transaction_date,
-        payment_status: data.payment_status,
-      } : o));
+      if (data.triggeredBy !== uid) {
+        setOrders(prev => prev.map(o => o.id === data.id ? {
+          ...o,
+          paid_amount: data.paid_amount != null ? Number(data.paid_amount) : null,
+          transaction_date: data.transaction_date,
+          payment_status: data.payment_status,
+        } : o));
+      }
     } else if (event === 'deletion_requested' || event === 'deletion_cancelled') {
       setOrders(prev => prev.map(o => o.id === data.id ? {
         ...o,
         deletion_status: data.deletion_status,
       } : o));
     } else if (event === 'deletion_approved') {
-      setOrders(prev => prev.filter(o => o.id !== data.id));
+      if (data.triggeredBy !== uid) {
+        setOrders(prev => prev.filter(o => o.id !== data.id));
+      }
     }
   });
 
