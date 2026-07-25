@@ -43,6 +43,8 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
     price: toPriceString(initialData.price),
     paid_amount: toPriceString(initialData.paid_amount),
     transaction_date: toDatetimeInput(initialData.transaction_date),
+    notes: initialData.notes || '',
+    payment_method: initialData.payment_method || '',
   });
 
   const handleSubmit = (e) => {
@@ -53,6 +55,8 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
       paid_amount: formData.paid_amount !== '' ? Number(formData.paid_amount) : null,
       person_id: Number(formData.person_id),
       transaction_date: formData.transaction_date || null,
+      notes: formData.notes || null,
+      payment_method: formData.payment_method || null,
     };
     onSubmit(data);
   };
@@ -159,6 +163,28 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
           </div>
         </div>
       )}
+      <div className="form-row" style={{ marginTop: '0.5rem' }}>
+        <div className="form-group">
+          <label>Notes</label>
+          <input
+            type="text"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="e.g., no chili, menu item"
+          />
+        </div>
+        <div className="form-group">
+          <label>Payment Method</label>
+          <select
+            value={formData.payment_method}
+            onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+          >
+            <option value="">-</option>
+            <option value="cash">Cash</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+      </div>
       <div className="form-group" style={{ marginTop: '0.5rem' }}>
         <label>Transaction Date & Time</label>
         <input

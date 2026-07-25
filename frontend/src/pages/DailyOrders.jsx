@@ -70,6 +70,8 @@ export default function DailyOrders() {
           person_id: data.person_id,
           person_name: data.person_name,
           person_avatar: data.person_avatar || null,
+          notes: data.notes || null,
+          payment_method: data.payment_method || null,
         }]);
       }
     } else if (event === 'order_updated') {
@@ -83,6 +85,8 @@ export default function DailyOrders() {
           deletion_status: data.deletion_status !== undefined ? data.deletion_status : o.deletion_status,
           person_id: data.person_id ?? o.person_id,
           person_name: data.person_name ?? o.person_name,
+          notes: data.notes !== undefined ? data.notes : o.notes,
+          payment_method: data.payment_method !== undefined ? data.payment_method : o.payment_method,
         } : o));
       }
     } else if (event === 'order_deleted') {
@@ -128,6 +132,8 @@ export default function DailyOrders() {
           person_id: result.person_id,
           person_name: result.person_name,
           person_avatar: result.person_avatar || null,
+          notes: result.notes || null,
+          payment_method: result.payment_method || null,
         }]);
       }
     } catch (err) {
@@ -147,9 +153,11 @@ export default function DailyOrders() {
         transaction_date: result.transaction_date !== undefined ? result.transaction_date : o.transaction_date,
         payment_status: result.payment_status !== undefined ? result.payment_status : o.payment_status,
         deletion_status: result.deletion_status !== undefined ? result.deletion_status : o.deletion_status,
-        person_id: result.person_id ?? o.person_id,
-        person_name: result.person_name ?? o.person_name,
-      } : o));
+          person_id: result.person_id ?? o.person_id,
+          person_name: result.person_name ?? o.person_name,
+          notes: result.notes !== undefined ? result.notes : o.notes,
+          payment_method: result.payment_method !== undefined ? result.payment_method : o.payment_method,
+        } : o));
     } catch (err) {
       alert(err.message);
     }

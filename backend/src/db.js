@@ -97,6 +97,21 @@ export const initDB = async () => {
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
 
+      DO $$ BEGIN
+        ALTER TABLE persons ADD COLUMN IF NOT EXISTS default_price INTEGER;
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      DO $$ BEGIN
+        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS notes TEXT;
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      DO $$ BEGIN
+        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(10);
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
