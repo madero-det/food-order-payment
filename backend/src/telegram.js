@@ -279,8 +279,11 @@ const handleCallbackQuery = async (query, pool) => {
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Order for ${order.person_name} deleted!`);
 
-      broadcast('order_deleted', {
+      broadcast('deletion_approved', {
         id: order.id,
+        person_id: order.person_id,
+        price: order.price,
+        order_date: order.order_date,
         triggeredBy: 'telegram',
       });
     } else if (action === 'delete_reject') {
