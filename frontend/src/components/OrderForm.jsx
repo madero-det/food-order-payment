@@ -88,7 +88,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
             <input
               type="number"
               min="0"
-              step="500"
+              step="100"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
@@ -99,7 +99,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
             <input
               type="number"
               min="0"
-              step="500"
+              step="100"
               value={formData.paid_amount}
               onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
               placeholder="Leave empty if unpaid"
@@ -139,7 +139,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
               <input
                 type="number"
                 min="0"
-                step="500"
+                step="100"
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 required
@@ -151,7 +151,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
             <input
               type="number"
               min="0"
-              step="500"
+              step="100"
               value={formData.paid_amount}
               onChange={(e) => setFormData({ ...formData, paid_amount: e.target.value })}
               placeholder="Leave empty if unpaid"
