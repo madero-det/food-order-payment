@@ -1,0 +1,16 @@
+{
+  "name": "Food Order Payment",
+  "short_name": "Food Orders",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#16213e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/app_icon.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ]
+}
