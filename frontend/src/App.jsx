@@ -31,7 +31,7 @@ import Dashboard from './pages/Dashboard';
 import DailyOrders from './pages/DailyOrders';
 import Persons from './pages/Persons';
 import PersonOrders from './pages/PersonOrders';
-import ChangePassword from './pages/ChangePassword';
+import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import { ToastProvider, useToast } from './components/Toast';
 import { api, getImageUrl } from './api/client';
@@ -210,7 +210,7 @@ function AppContent() {
             <Route path="/persons" element={<Persons user={user} onUserUpdate={setUser} />} />
             <Route path="/person-orders" element={<PersonOrders />} />
             <Route path="/notifications" element={<Notifications onCountChange={setUnreadCount} />} />
-            <Route path="/settings" element={<ChangePassword onUserUpdate={setUser} />} />
+            <Route path="/settings" element={<Settings onUserUpdate={setUser} />} />
           </Routes>
         </main>
       </div>

@@ -7,7 +7,7 @@ function getInitials(name) {
   return name ? name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
 }
 
-export default function ChangePassword({ onUserUpdate }) {
+export default function Settings({ onUserUpdate }) {
   const navigate = useNavigate();
   const user = api.getCurrentUser();
   const fileRef = useRef(null);
