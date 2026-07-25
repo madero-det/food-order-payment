@@ -65,16 +65,17 @@ const ADMIN_NOTIFICATION_MAP = {
 
 export const saveNotification = async (event, data) => {
   const factory = NOTIFICATION_MAP[event];
-  if (!factory) return;
 
-  const notif = factory(data);
-  try {
-    await pool.query(
-      `INSERT INTO notifications (user_id, type, title, message, order_id) VALUES ($1, $2, $3, $4, $5)`,
-      [notif.user_id, notif.type, notif.title, notif.message, notif.order_id || null]
-    );
-  } catch (err) {
-    console.error('Failed to save notification:', err.message);
+  if (factory) {
+    const notif = factory(data);
+    try {
+      await pool.query(
+        `INSERT INTO notifications (user_id, type, title, message, order_id) VALUES ($1, $2, $3, $4, $5)`,
+        [notif.user_id, notif.type, notif.title, notif.message, notif.order_id || null]
+      );
+    } catch (err) {
+      console.error('Failed to save notification:', err.message);
+    }
   }
 
   if (ADMIN_EVENTS.includes(event)) {
