@@ -321,7 +321,18 @@ export default function Dashboard() {
                   <tbody>
                     {data.by_person.map((p) => (
                       <tr key={p.name} onClick={() => navigate(`/person-orders?person_id=${p.person_id}`)} style={{ cursor: 'pointer' }}>
-                        <td><strong>{p.name}</strong></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {p.person_avatar ? (
+                              <img src={getImageUrl(p.person_avatar)} alt="" className="avatar" style={{ width: 24, height: 24 }} />
+                            ) : (
+                              <div className="avatar avatar-initials" style={{ width: 24, height: 24, fontSize: '0.6rem' }}>
+                                {p.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <strong>{p.name}</strong>
+                          </div>
+                        </td>
                         <td>{p.order_count}</td>
                         <td style={{ color: p.unpaid_count > 0 ? '#dc2626' : undefined }}>{p.unpaid_count || 0}</td>
                         <td>{formatRiel(p.total_spent)}</td>

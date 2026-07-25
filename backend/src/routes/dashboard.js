@@ -45,7 +45,8 @@ router.get('/', async (req, res, next) => {
         [startDate, endDate]
       ),
       pool.query(
-        `SELECT p.id as person_id, p.name, COUNT(fo.id) as order_count,
+        `SELECT p.id as person_id, p.name, p.profile_image as person_avatar,
+                COUNT(fo.id) as order_count,
                 COUNT(fo.id) FILTER (WHERE fo.paid_amount IS NULL) as unpaid_count,
                 SUM(fo.price) as total_spent,
                 SUM(COALESCE(fo.paid_amount, 0)) as total_paid
@@ -87,6 +88,7 @@ router.get('/', async (req, res, next) => {
       by_person: personResult.rows.map((r) => ({
         person_id: r.person_id,
         name: r.name,
+        person_avatar: r.person_avatar,
         order_count: Number(r.order_count),
         unpaid_count: Number(r.unpaid_count),
         total_spent: Number(r.total_spent),
