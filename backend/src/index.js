@@ -50,10 +50,6 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
 app.use('/api/orders', authenticate, ordersRouter);
 app.use('/api/persons', authenticate, personsRouter);
 app.use('/api/dashboard', authenticate, dashboardRouter);
