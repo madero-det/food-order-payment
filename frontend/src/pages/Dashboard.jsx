@@ -99,7 +99,7 @@ export default function Dashboard() {
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <button className="btn btn-primary btn-sm" style={{ paddingTop: '0.4rem', paddingBottom: '0.4rem' }} onClick={async () => {
+          <button className="btn btn-primary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.9rem', border: '1px solid #1d4ed8', lineHeight: 'normal' }} onClick={async () => {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const res = await fetch(`${API_BASE}/dashboard/export?month=${month}&year=${year}`, {
               headers: { Authorization: `Bearer ${token}` }
