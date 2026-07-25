@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { api, getImageUrl } from '../api/client';
+import { API_BASE } from '../api/client';
 import useSSE from '../hooks/useSSE';
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -98,6 +99,19 @@ export default function Dashboard() {
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
+          <button className="btn btn-primary btn-sm" onClick={async () => {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const res = await fetch(`${API_BASE}/dashboard/export?month=${month}&year=${year}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `orders-${year}-${String(month).padStart(2,'0')}.xlsx`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}>Export Excel</button>
         </div>
       </div>
 

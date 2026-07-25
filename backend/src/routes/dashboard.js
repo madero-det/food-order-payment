@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import xlsx from 'xlsx';
 import { khmDate, khmMonth, khmYear } from '../khm-datetime.js';
 
 const router = Router();
@@ -165,6 +166,51 @@ router.get('/monthly', async (req, res, next) => {
     });
 
     res.json(monthly);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/export', async (req, res, next) => {
+  try {
+    const { month, year } = req.query;
+    const m = month || khmMonth();
+    const y = year || khmYear();
+    const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const endDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    const isAdmin = req.user.role === 'admin';
+    const personFilter = isAdmin ? '' : ` AND fo.person_id = ${req.user.id}`;
+
+    const result = await pool.query(
+      `SELECT fo.order_date, p.name as person_name, fo.price, fo.paid_amount, fo.transaction_date,
+              fo.payment_status, fo.payment_method, fo.notes
+       FROM food_orders fo
+       JOIN persons p ON fo.person_id = p.id
+       WHERE fo.order_date BETWEEN $1 AND $2${personFilter}
+       ORDER BY fo.order_date, p.name`,
+      [startDate, endDate]
+    );
+
+    const data = result.rows.map(r => ({
+      Date: r.order_date,
+      Person: r.person_name,
+      Price: Number(r.price),
+      Paid: r.paid_amount ? Number(r.paid_amount) : 0,
+      'Transaction Date': r.transaction_date || '-',
+      Status: r.payment_status || (r.paid_amount ? 'approved' : 'unpaid'),
+      Method: r.payment_method || '-',
+      Notes: r.notes || '',
+    }));
+
+    const wb = xlsx.utils.book_new();
+    const ws = xlsx.utils.json_to_sheet(data);
+    xlsx.utils.book_append_sheet(wb, ws, 'Orders');
+    const buf = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=orders-${y}-${String(m).padStart(2,'0')}.xlsx`);
+    res.send(buf);
   } catch (err) {
     next(err);
   }
