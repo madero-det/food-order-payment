@@ -26,8 +26,8 @@ router.get('/', async (req, res, next) => {
   try {
     const isAdmin = req.user.role === 'admin';
     const query = isAdmin
-      ? 'SELECT id, name, role, profile_image, default_price, telegram_chat_id, created_at FROM persons ORDER BY name ASC'
-      : 'SELECT id, name, role, profile_image, default_price, telegram_chat_id, created_at FROM persons WHERE id = $1';
+      ? 'SELECT id, name, role, profile_image, default_price, created_at FROM persons ORDER BY name ASC'
+      : 'SELECT id, name, role, profile_image, default_price, created_at FROM persons WHERE id = $1';
     const params = isAdmin ? [] : [req.user.id];
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -158,19 +158,6 @@ router.post('/:id/avatar', upload.single('image'), async (req, res, next) => {
       return res.status(404).json({ error: 'Person not found' });
     }
     res.json(result.rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.delete('/:id/telegram', async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (Number(id) !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    await pool.query('UPDATE persons SET telegram_chat_id = NULL WHERE id = $1', [id]);
-    res.json({ message: 'Telegram disconnected' });
   } catch (err) {
     next(err);
   }

@@ -147,55 +147,6 @@ export default function Settings({ onUserUpdate }) {
         )}
       </div>
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <div>
-              <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>Telegram Connection</div>
-              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Receive payment notifications directly on Telegram</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.25rem', flexShrink: 0 }}>
-            {user?.telegram_connected ? (
-              <>
-                <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 500, alignSelf: 'center' }}>On</span>
-                <button
-                  className="btn btn-ghost btn-sm"
-                  title="Disconnect Telegram"
-                  onClick={async () => {
-                    try {
-                      await api.disconnectTelegram(user.id);
-                      const updated = { ...user, telegram_connected: false };
-                      if (onUserUpdate) onUserUpdate(updated);
-                      const storage = localStorage.getItem('token') ? localStorage : sessionStorage;
-                      storage.setItem('user', JSON.stringify(updated));
-                    } catch (err) {
-                      alert(err.message);
-                    }
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="4" y1="4" x2="20" y2="20"/></svg>
-                </button>
-              </>
-            ) : (
-              <a href="https://t.me/food_order_pay_bot" target="_blank" rel="noreferrer"
-                className="btn btn-ghost btn-sm"
-                title="Connect Telegram"
-                style={{ color: '#9ca3af' }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              </a>
-            )}
-          </div>
-        </div>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#6b7280' }}>
-          Send <strong>/start</strong> to{' '}
-          <a href="https://t.me/food_order_pay_bot" target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>@food_order_pay_bot</a>
-          {' '}on Telegram.
-        </p>
-      </div>
-
       <div className="card">
         <form onSubmit={handleSubmit}>
           {error && <div className="alert alert-error">{error}</div>}
