@@ -9,6 +9,8 @@
 
 ## Authentication
 
+All endpoints use **Cambodia timezone** (Asia/Phnom_Penh, UTC+7) for date/time generation.
+
 All protected endpoints require a JWT token in the `Authorization` header:
 
 ```
@@ -269,7 +271,8 @@ Create a new order.
   "payment_status": null,
   "deletion_status": null,
   "person_id": 20,
-  "person_name": "Madero"
+  "person_name": "Madero",
+  "person_avatar": "https://res.cloudinary.com/..."
 }
 ```
 
@@ -403,7 +406,9 @@ Admin only. Approve a pending deletion request. Permanently deletes the order.
 }
 ```
 
-**SSE Event:** `order_deleted`
+**SSE Event:** `deletion_approved`
+
+**Notes:** Telegram and web approval use the same SSE event `deletion_approved`. Frontend filters by `data.person_id` to show only to the affected user.
 
 ---
 
@@ -560,6 +565,7 @@ Get monthly dashboard summary, daily breakdown, by-person stats, and today's ord
     {
       "person_id": 20,
       "name": "Madero",
+      "person_avatar": "https://res.cloudinary.com/...",
       "order_count": 45,
       "unpaid_count": 2,
       "total_spent": 360000,
@@ -730,27 +736,36 @@ Real-time event stream for live updates.
 | Event | Recipient | Trigger |
 |-------|-----------|---------|
 | `connected` | All | Initial connection confirmation |
-| `heartbeat` | All | Keep-alive every 30 seconds |
-| `order_created` | All | New order created |
+| `heartbeat` | All | Keep-alive every 15 seconds with Cambodia dateTime |
+| `order_created` | All | New order created (includes `person_avatar`) |
 | `order_updated` | All | Order modified |
-| `order_deleted` | All | Order deleted |
+| `order_deleted` | All | Order deleted (admin direct delete) |
 | `payment_submitted` | Admin | User paid (pending approval) |
-| `payment_approved` | User + Admin | Payment approved |
+| `payment_approved` | User + Admin | Payment approved or admin direct payment |
 | `payment_rejected` | User | Payment rejected |
 | `deletion_requested` | Admin | User requested deletion |
-| `deletion_approved` | User | Admin approved deletion |
+| `deletion_approved` | User | Admin approved deletion (web or Telegram) |
 | `deletion_cancelled` | User | Admin cancelled deletion |
+
+**Heartbeat Format:**
+```
+event: heartbeat
+data: {"dateTime":"2026-07-25 23:54:15"}
+```
 
 **Event Format:**
 ```
 event: payment_approved
-data: {"id":50,"person_id":20,"person_name":"Madero","price":8000,"order_date":"2026-07-25","transaction_date":"2026-07-25 10:30:00","payment_status":"approved","triggeredBy":20}
+data: {"id":50,"person_id":20,"person_name":"Madero","price":8000,"person_avatar":"https://res.cloudinary.com/...","order_date":"2026-07-25","transaction_date":"2026-07-25 10:30:00","payment_status":"approved","triggeredBy":20}
 ```
 
 **Notes:**
 - Each client (tab/page) opens a separate SSE connection
+- Events are broadcast to all connected clients; frontend filters by `person_id` and `triggeredBy`
 - Auto-reconnect with exponential backoff (max 10 attempts, up to 30s delay)
+- Heartbeat sent every 15 seconds with Cambodia dateTime to keep proxies alive
 - Connection closes on page unload or logout
+- All dates/times use Cambodia timezone (Asia/Phnom_Penh, UTC+7)
 
 ---
 
@@ -778,4 +793,3 @@ No rate limiting is currently enforced. The following limits apply per platform 
 | Neon compute | Unlimited (free tier) |
 | Cloudinary storage | 25 GB |
 | Cloudinary bandwidth | 25 GB/month |
-| Cron-job pings | 1 per 14 minutes (keeps server awake) |
