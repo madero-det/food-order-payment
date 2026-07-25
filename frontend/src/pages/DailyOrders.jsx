@@ -126,7 +126,7 @@ export default function DailyOrders() {
           deletion_status: result.deletion_status,
           person_id: result.person_id,
           person_name: result.person_name,
-          person_avatar: null,
+          person_avatar: result.person_avatar || null,
         }]);
       }
     } catch (err) {

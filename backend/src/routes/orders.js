@@ -158,7 +158,7 @@ router.post('/', async (req, res, next) => {
       triggeredBy: req.user.id,
     });
 
-    res.status(201).json({ ...order, person_name: personName });
+    res.status(201).json({ ...order, person_name: personName, person_avatar: personAvatar });
   } catch (err) {
     next(err);
   }
