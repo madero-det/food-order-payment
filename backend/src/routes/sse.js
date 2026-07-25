@@ -12,9 +12,11 @@ router.get('/', (req, res) => {
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache, no-transform',
+    'Cache-Control': 'no-cache, no-store, no-transform, must-revalidate',
     'Connection': 'keep-alive',
     'X-Accel-Buffering': 'no',
+    'CDN-Cache-Control': 'no-cache',
+    'Cloudflare-CDN-Cache-Control': 'no-cache',
   });
 
   res.write(`event: connected\ndata: ${JSON.stringify({ userId })}\n\n`);
@@ -22,8 +24,8 @@ router.get('/', (req, res) => {
   const connId = addClient(userId, res);
 
   const heartbeat = setInterval(() => {
-    res.write(`event: heartbeat\ndata: ${JSON.stringify({ time: Date.now() })}\n\n`);
-  }, 30000);
+    res.write(`: heartbeat\n\n`);
+  }, 15000);
 
   req.on('close', () => {
     clearInterval(heartbeat);
