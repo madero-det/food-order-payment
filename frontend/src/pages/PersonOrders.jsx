@@ -94,7 +94,8 @@ export default function PersonOrders() {
 
   useSSE((event, data) => {
     if (event === 'order_created' || event === 'order_updated' || event === 'order_deleted' ||
-        event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected') {
+        event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected' ||
+        event === 'deletion_requested' || event === 'deletion_cancelled' || event === 'deletion_approved') {
       if (selectedId && (!data.triggeredBy || data.person_id === Number(selectedId) || data.triggeredBy === 'telegram')) {
         fetchOrders(page, false);
       }
