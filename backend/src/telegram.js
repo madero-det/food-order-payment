@@ -61,7 +61,48 @@ export const sendPaymentNotification = async ({ personName, price, paidAmount, o
           { text: '❌ Reject', callback_data: `reject:${orderId}` },
         ],
       ],
-    };
+};
+
+export const sendUnpaidReminder = async (pool) => {
+  try {
+    const now = new Date();
+    const khh = parseInt(now.toLocaleString('en-US', { timeZone: 'Asia/Phnom_Penh', hour: '2-digit', hour12: false }));
+    if (khh !== 20) return;
+
+    const today = new Date().toLocaleString('en-CA', { timeZone: 'Asia/Phnom_Penh' }).split(',')[0];
+    const result = await pool.query(
+      `SELECT fo.id, fo.price, p.name as person_name
+       FROM food_orders fo
+       JOIN persons p ON fo.person_id = p.id
+       WHERE fo.order_date = $1 AND fo.paid_amount IS NULL
+       ORDER BY p.name`,
+      [today]
+    );
+
+    if (result.rows.length === 0) return;
+
+    const lines = result.rows.map((o, i) =>
+      `  ${i + 1}. ${o.person_name} — ${Number(o.price).toLocaleString()} R`
+    ).join('\n');
+
+    const total = result.rows.reduce((s, o) => s + Number(o.price), 0);
+
+    const msg = [
+      `⚠️ *Unpaid Orders Today* (${today})`,
+      '',
+      `${result.rows.length} orders — ${total.toLocaleString()} R`,
+      '',
+      lines,
+    ].join('\n');
+
+    await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'Markdown' }),
+    });
+  } catch (err) {
+    console.error('Unpaid reminder error:', err.message);
+  }
+};
   }
 
   try {

@@ -13,7 +13,7 @@ import sseRouter from './routes/sse.js';
 import notificationsRouter from './routes/notifications.js';
 import { authenticate } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
-import { startTelegramPolling } from './telegram.js';
+import { startTelegramPolling, sendUnpaidReminder } from './telegram.js';
 
 dotenv.config();
 
@@ -61,6 +61,7 @@ app.use(errorHandler);
 const start = async () => {
   await initDB();
   startTelegramPolling(pool);
+  setInterval(() => sendUnpaidReminder(pool), 60 * 60 * 1000);
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
