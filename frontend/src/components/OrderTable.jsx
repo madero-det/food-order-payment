@@ -118,9 +118,13 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
                   </div>
                 )}
                 <strong>{order.person_name}</strong>
+                {order.notes && <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 1 }}>{order.notes}</div>}
               </div>
             </td>
-            <td>{formatRiel(order.price)}</td>
+            <td>
+              <div>{formatRiel(order.price)}</div>
+              {order.payment_method && <span className="badge" style={{ background: order.payment_method === 'cash' ? '#dbeafe' : '#d1fae5', color: order.payment_method === 'cash' ? '#1e40af' : '#065f46', fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: 2 }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>}
+            </td>
             <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
             <td className="hide-mobile">{formatDate(order.transaction_date)}</td>
             <td>{renderBadges(order)}</td>
@@ -148,7 +152,19 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
             </div>
             {renderBadges(order)}
           </div>
-          <div className="order-card-body">
+            <div className="order-card-body">
+            {order.notes && (
+              <div className="order-card-row">
+                <span className="label">Notes</span>
+                <span className="value" style={{ color: '#6b7280' }}>{order.notes}</span>
+              </div>
+            )}
+            {order.payment_method && (
+              <div className="order-card-row">
+                <span className="label">Method</span>
+                <span className="value" style={{ color: order.payment_method === 'cash' ? '#1e40af' : '#065f46' }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>
+              </div>
+            )}
             <div className="order-card-row">
               <span className="label">Price</span>
               <span className="value">{formatRiel(order.price)}</span>

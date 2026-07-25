@@ -78,7 +78,11 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
             <label>Person</label>
             <select
               value={formData.person_id}
-              onChange={(e) => setFormData({ ...formData, person_id: e.target.value })}
+              onChange={(e) => {
+                const pid = e.target.value;
+                const person = persons.find(p => p.id === Number(pid));
+                setFormData({ ...formData, person_id: pid, price: person?.default_price ? String(person.default_price) : formData.price });
+              }}
               required
             >
               <option value="">Select person...</option>
