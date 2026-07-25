@@ -24,7 +24,8 @@ router.get('/', (req, res) => {
   const connId = addClient(userId, res);
 
   const heartbeat = setInterval(() => {
-    res.write(`: heartbeat\n\n`);
+    const dt = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Phnom_Penh' }).replace('T', ' ');
+    res.write(`event: heartbeat\ndata: ${JSON.stringify({ dateTime: dt.substring(0, 19) })}\n\n`);
   }, 15000);
 
   req.on('close', () => {
