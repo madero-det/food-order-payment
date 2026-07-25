@@ -35,8 +35,8 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDashboard = async () => {
-    setLoading(true);
+  const fetchDashboard = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const [dashboard, monthly] = await Promise.all([
         api.getDashboard({ month, year }),
@@ -47,20 +47,20 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
+
+  const refreshDashboard = () => fetchDashboard(true);
 
   useEffect(() => {
     fetchDashboard();
   }, [month, year]);
 
   useSSE((event, data) => {
-    if (event === 'order_created' || event === 'order_updated' || event === 'order_deleted') {
-      fetchDashboard();
-    } else if (event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected') {
-      fetchDashboard();
-    } else if (event === 'deletion_requested' || event === 'deletion_cancelled') {
-      fetchDashboard();
+    if (event === 'order_created' || event === 'order_updated' || event === 'order_deleted' ||
+        event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected' ||
+        event === 'deletion_requested' || event === 'deletion_cancelled') {
+      refreshDashboard();
     }
   });
 
