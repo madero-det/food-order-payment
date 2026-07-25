@@ -19,6 +19,8 @@ export default function ChangePassword({ onUserUpdate }) {
   const [loading, setLoading] = useState(false);
   const [cropSrc, setCropSrc] = useState(null);
   const [notifPermission, setNotifPermission] = useState(() => {
+    const stored = localStorage.getItem('notificationsEnabled');
+    if (stored !== null) return stored === 'true' ? 'granted' : 'denied';
     return typeof Notification !== 'undefined' ? Notification.permission : 'denied';
   });
 
@@ -80,6 +82,7 @@ export default function ChangePassword({ onUserUpdate }) {
   const handleNotifToggle = async () => {
     if (notifPermission === 'granted') {
       setNotifPermission('denied');
+      localStorage.setItem('notificationsEnabled', 'false');
       return;
     }
     if (typeof Notification === 'undefined') {
@@ -88,6 +91,7 @@ export default function ChangePassword({ onUserUpdate }) {
     }
     const result = await Notification.requestPermission();
     setNotifPermission(result);
+    localStorage.setItem('notificationsEnabled', result === 'granted' ? 'true' : 'false');
   };
 
   const avatarUrl = getImageUrl(user?.profile_image);

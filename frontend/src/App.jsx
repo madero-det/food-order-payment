@@ -64,6 +64,7 @@ function AppContent() {
   const addToast = useToast();
 
   const notify = (title, body, tag) => {
+    if (localStorage.getItem('notificationsEnabled') === 'false') return;
     if (Notification.permission !== 'granted') return;
     if (navigator.serviceWorker?.controller) {
       navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
