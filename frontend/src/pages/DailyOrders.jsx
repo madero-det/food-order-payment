@@ -24,6 +24,7 @@ export default function DailyOrders() {
   const [approveDeletionModal, setApproveDeletionModal] = useState({ show: false, orderId: null });
   const [cancelDeletionModal, setCancelDeletionModal] = useState({ show: false, orderId: null });
   const [rejectModal, setRejectModal] = useState({ show: false, orderId: null });
+  const [approveModal, setApproveModal] = useState({ show: false, orderId: null });
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -201,8 +202,13 @@ export default function DailyOrders() {
   };
 
   const handleApprove = async (id) => {
+    setApproveModal({ show: true, orderId: id });
+  };
+
+  const confirmApprove = async () => {
     try {
-      const result = await api.approveOrder(id);
+      const result = await api.approveOrder(approveModal.orderId);
+      setApproveModal({ show: false, orderId: null });
       setOrders(prev => prev.map(o => o.id === result.id ? {
         ...o,
         payment_status: 'approved',
@@ -398,6 +404,19 @@ export default function DailyOrders() {
             <div className="form-actions">
               <button className="btn btn-ghost" onClick={() => setRejectModal({ show: false, orderId: null })}>Cancel</button>
               <button className="btn btn-danger" onClick={confirmReject}>Reject</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approveModal.show && (
+        <div className="modal-overlay" onClick={() => setApproveModal({ show: false, orderId: null })}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Approve Payment</h3>
+            <p style={{ margin: '1rem 0' }}>Are you sure you want to approve this payment?</p>
+            <div className="form-actions">
+              <button className="btn btn-ghost" onClick={() => setApproveModal({ show: false, orderId: null })}>Cancel</button>
+              <button className="btn btn-success" onClick={confirmApprove}>Approve</button>
             </div>
           </div>
         </div>
