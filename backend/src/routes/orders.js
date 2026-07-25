@@ -254,7 +254,15 @@ router.put('/:id', async (req, res, next) => {
     }
     const order = result.rows[0];
     const personResult = await pool.query('SELECT name FROM persons WHERE id = $1', [order.person_id]);
-    res.json({ ...order, person_name: personResult.rows[0].name });
+    const personName = personResult.rows[0].name;
+
+    broadcast('order_updated', {
+      ...order,
+      person_name: personName,
+      triggeredBy: req.user.id,
+    });
+
+    res.json({ ...order, person_name: personName });
   } catch (err) {
     next(err);
   }
