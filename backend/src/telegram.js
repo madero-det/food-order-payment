@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { broadcast } from './events.js';
+import { khmNow } from './khm-datetime.js';
 
 dotenv.config();
 
@@ -220,7 +221,7 @@ const handleCallbackQuery = async (query, pool) => {
         `🍽️ *Order Date:* ${order.order_date}`,
         `📅 *Transaction Date:* ${order.transaction_date}`,
         '',
-        `_Approved at ${new Date().toLocaleString()}_`,
+        `_Approved at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Payment for ${order.person_name} approved!`);
@@ -246,7 +247,7 @@ const handleCallbackQuery = async (query, pool) => {
         `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${order.order_date}`,
         '',
-        `_Rejected at ${new Date().toLocaleString()}_`,
+        `_Rejected at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Payment for ${order.person_name} rejected!`);
@@ -273,7 +274,7 @@ const handleCallbackQuery = async (query, pool) => {
         `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${order.order_date}`,
         '',
-        `_Deleted at ${new Date().toLocaleString()}_`,
+        `_Deleted at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Order for ${order.person_name} deleted!`);
@@ -299,7 +300,7 @@ const handleCallbackQuery = async (query, pool) => {
         `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${order.order_date}`,
         '',
-        `_Cancelled at ${new Date().toLocaleString()}_`,
+        `_Cancelled at ${khmNow()}_`,
       ].join('\n');
       await editMessageText(message.chat.id, message.message_id, newText, { reply_markup: { inline_keyboard: [] } });
       await answerCallbackQuery(id, `Delete request for ${order.person_name} cancelled!`);

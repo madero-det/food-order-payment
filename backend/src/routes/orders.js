@@ -3,6 +3,7 @@ import pool from '../db.js';
 import { sendPaymentNotification, sendDeletionNotification, editMessageText } from '../telegram.js';
 import { broadcast } from '../events.js';
 import { saveAdminPaymentNotification } from '../notifications.js';
+import { khmNow } from '../khm-datetime.js';
 
 const router = Router();
 
@@ -333,7 +334,7 @@ router.delete('/:id', async (req, res, next) => {
         `💰 *Amount:* ${Number(deletedOrder.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${deletedOrder.order_date}`,
         '',
-        `_Deleted via web at ${new Date().toLocaleString()}_`,
+        `_Deleted via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(deletedOrder.telegram_chat_id, deletedOrder.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
     }
@@ -441,7 +442,7 @@ router.post('/:id/approve', async (req, res, next) => {
         `🍽️ *Order Date:* ${order.order_date}`,
         `📅 *Transaction Date:* ${order.transaction_date}`,
         '',
-        `_Approved via web at ${new Date().toLocaleString()}_`,
+        `_Approved via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(order.telegram_chat_id, order.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
     }
@@ -481,7 +482,7 @@ router.post('/:id/reject', async (req, res, next) => {
         `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${order.order_date}`,
         '',
-        `_Rejected via web at ${new Date().toLocaleString()}_`,
+        `_Rejected via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(order.telegram_chat_id, order.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
     }
@@ -517,7 +518,7 @@ router.post('/:id/approve-deletion', async (req, res, next) => {
         `💰 *Amount:* ${Number(deletedOrder.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${deletedOrder.order_date}`,
         '',
-        `_Approved via web at ${new Date().toLocaleString()}_`,
+        `_Approved via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(deletedOrder.telegram_chat_id, deletedOrder.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
     }
@@ -558,7 +559,7 @@ router.post('/:id/cancel-deletion', async (req, res, next) => {
         `💰 *Amount:* ${Number(order.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${order.order_date}`,
         '',
-        `_Cancelled via web at ${new Date().toLocaleString()}_`,
+        `_Cancelled via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(order.telegram_chat_id, order.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
     }

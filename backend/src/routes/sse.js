@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { addClient, removeClient } from '../events.js';
+import { khmDateTime } from '../khm-datetime.js';
 
 const router = Router();
 
@@ -24,8 +25,7 @@ router.get('/', (req, res) => {
   const connId = addClient(userId, res);
 
   const heartbeat = setInterval(() => {
-    const dt = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Phnom_Penh' }).replace('T', ' ');
-    res.write(`event: heartbeat\ndata: ${JSON.stringify({ dateTime: dt.substring(0, 19) })}\n\n`);
+    res.write(`event: heartbeat\ndata: ${JSON.stringify({ dateTime: khmDateTime() })}\n\n`);
   }, 15000);
 
   req.on('close', () => {

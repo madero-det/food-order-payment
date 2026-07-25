@@ -1,17 +1,18 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import { khmDate, khmMonth, khmYear } from '../khm-datetime.js';
 
 const router = Router();
 
 function todayKHM() {
-  return new Date().toLocaleString('en-CA', { timeZone: 'Asia/Phnom_Penh' }).split(',')[0];
+  return khmDate();
 }
 
 router.get('/', async (req, res, next) => {
   try {
     const { month, year } = req.query;
-    const m = month || new Date().getMonth() + 1;
-    const y = year || new Date().getFullYear();
+    const m = month || khmMonth();
+    const y = year || khmYear();
     const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
     const lastDay = new Date(y, m, 0).getDate();
     const endDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
@@ -112,8 +113,8 @@ router.get('/', async (req, res, next) => {
 router.get('/unpaid', async (req, res, next) => {
   try {
     const { month, year } = req.query;
-    const m = month || new Date().getMonth() + 1;
-    const y = year || new Date().getFullYear();
+    const m = month || khmMonth();
+    const y = year || khmYear();
     const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
     const lastDay = new Date(y, m, 0).getDate();
     const endDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
@@ -136,7 +137,7 @@ router.get('/unpaid', async (req, res, next) => {
 router.get('/monthly', async (req, res, next) => {
   try {
     const { year } = req.query;
-    const y = year || new Date().getFullYear();
+    const y = year || khmYear();
     const startDate = `${y}-01-01`;
     const endDate = `${y}-12-31`;
     const isAdmin = req.user.role === 'admin';
