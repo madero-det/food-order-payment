@@ -480,6 +480,14 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   color: #2563eb;
 }
 
+.toast-warning {
+  border-left: 4px solid #d97706;
+}
+
+.toast-warning .toast-icon {
+  color: #d97706;
+}
+
 .toast-message {
   flex: 1;
   font-size: 0.85rem;

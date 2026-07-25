@@ -99,7 +99,7 @@ function AppContent() {
         refreshUnread();
       } else if (user.role === 'admin' && !data.fromApproval) {
         const msg = `The payment for ${Number(data.price).toLocaleString()} R has been updated!\nName: ${data.person_name}\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
-        addToast(msg, 'info');
+        addToast(msg, 'success');
         notify('Payment Updated', msg, `payment-${data.id}`);
         refreshUnread();
       }
@@ -111,20 +111,20 @@ function AppContent() {
     } else if (event === 'payment_submitted') {
       if (user.role === 'admin') {
         const msg = `${data.person_name || 'User'} submitted a payment of ${Number(data.price).toLocaleString()} R for approval.\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
-        addToast(msg, 'info');
+        addToast(msg, 'warning');
         notify('Payment Pending Approval', msg, `payment-${data.id}`);
         refreshUnread();
       }
     } else if (event === 'deletion_requested') {
       if (user.role === 'admin') {
         const msg = `${data.person_name || 'User'} requested to delete order #${data.id} (${Number(data.price).toLocaleString()} R).\nOrder: ${formatDate(data.order_date)}`;
-        addToast(msg, 'info');
+        addToast(msg, 'warning');
         notify('Delete Request Pending', msg, `deletion-${data.id}`);
         refreshUnread();
       }
     } else if (event === 'deletion_cancelled' && pid === uid) {
       const msg = `Your delete request for order #${data.id} (${Number(data.price).toLocaleString()} R) has been cancelled.`;
-      addToast(msg, 'info');
+      addToast(msg, 'error');
       notify('Delete Request Cancelled', msg, `deletion-${data.id}`);
       refreshUnread();
     } else if (event === 'deletion_approved' && pid === uid) {
