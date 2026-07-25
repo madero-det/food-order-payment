@@ -330,6 +330,7 @@ router.delete('/:id', async (req, res, next) => {
 
     broadcast('order_deleted', {
       id: deletedOrder.id,
+      person_id: deletedOrder.person_id,
       triggeredBy: req.user.id,
     });
 
