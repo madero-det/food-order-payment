@@ -125,7 +125,9 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
               </div>
             </td>
             <td style={{ fontSize: '0.85rem', color: '#2563eb' }}>
-              {order.items && order.items.length > 0 ? order.items.map(i => i.name).join(', ') : '-'}
+              {order.items && order.items.length > 0
+                ? order.items.map(i => i.name).join(', ') + (order.notes ? ` (${order.notes})` : '')
+                : order.notes ? `(${order.notes})` : '-'}
             </td>
             <td>
               <div>{formatRiel(order.price)}</div>
@@ -162,10 +164,10 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
             {order.items && order.items.length > 0 && (
               <div className="order-card-row">
                 <span className="label">Items</span>
-                <span className="value" style={{ color: '#2563eb' }}>{order.items.map(i => i.name).join(', ')}</span>
+                <span className="value" style={{ color: '#2563eb' }}>{order.items.map(i => i.name).join(', ')}{order.notes ? ` (${order.notes})` : ''}</span>
               </div>
             )}
-            {order.notes && (
+            {order.notes && !order.items?.length && (
               <div className="order-card-row">
                 <span className="label">Notes</span>
                 <span className="value" style={{ color: '#6b7280' }}>{order.notes}</span>
