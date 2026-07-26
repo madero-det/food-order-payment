@@ -155,13 +155,10 @@ export default function MenuPage() {
                   <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
                   <td>{Number(item.price).toLocaleString()} R</td>
                   <td>
-                    <button
-                      className={`btn btn-sm ${item.is_available !== false ? 'btn-success' : 'btn-ghost'}`}
-                      onClick={() => handleToggleAvailable(item)}
-                      style={{ fontSize: '0.7rem', minWidth: '44px' }}
-                    >
-                      {item.is_available !== false ? 'On' : 'Off'}
-                    </button>
+                    <label className="toggle-switch" style={{ margin: 0 }}>
+                      <input type="checkbox" checked={item.is_available !== false} onChange={() => handleToggleAvailable(item)} />
+                      <span className="toggle-slider" />
+                    </label>
                   </td>
                   <td>
                     <div className="table-actions">
