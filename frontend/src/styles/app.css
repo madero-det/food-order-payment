@@ -1120,3 +1120,13 @@ body.dark,
 .dark .food-total {
   color: #e5e7eb;
 }
+
+.notif-unread {
+  --notif-unread-bg: #eff6ff;
+  background: #eff6ff;
+}
+
+.dark .notif-unread {
+  --notif-unread-bg: #1e3a5f;
+  background: #1e3a5f;
+}

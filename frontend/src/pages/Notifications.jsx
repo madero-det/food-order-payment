@@ -130,18 +130,18 @@ export default function Notifications({ onCountChange }) {
               <div
                 key={notif.id}
                 onClick={() => handleClick(notif)}
+                className={notif.is_read ? '' : 'notif-unread'}
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '0.75rem',
                   padding: '0.875rem 1rem',
                   borderBottom: '1px solid #f3f4f6',
-                  background: notif.is_read ? 'transparent' : '#eff6ff',
                   cursor: notif.order_id ? 'pointer' : 'default',
                   transition: 'background 0.15s',
                 }}
                 onMouseEnter={(e) => { if (notif.is_read) e.currentTarget.style.background = '#f9fafb'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = notif.is_read ? 'transparent' : '#eff6ff'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = notif.is_read ? 'transparent' : 'var(--notif-unread-bg, #eff6ff)'; }}
               >
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%',
