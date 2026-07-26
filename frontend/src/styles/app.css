@@ -928,6 +928,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     color: #111827;
   }
 
+  .dark .mobile-cards .order-card-header .order-date {
+    color: #e5e7eb;
+  }
+
   .mobile-cards .order-card-body {
     display: flex;
     flex-direction: column;
