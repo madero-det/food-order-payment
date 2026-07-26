@@ -51,25 +51,23 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     payment_method: initialData.payment_method || '',
   });
 
-  const [selectedItems, setSelectedItems] = useState(initItems);
-  const [newItemId, setNewItemId] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0);
-
-  useEffect(() => {
-    setFormData(prev => ({ ...prev, price: totalPrice || prev.price }));
-  }, [totalPrice]);
-
-  const addItem = () => {
-    if (!newItemId) return;
-    const item = menuItems.find(m => m.id === Number(newItemId));
-    if (!item) return;
-    setSelectedItems(prev => [...prev, { menu_item_id: item.id, quantity: 1, price: item.price, id: Date.now() + Math.random() }]);
-    setNewItemId('');
-  };
-
-  const removeItem = (uid) => {
+    const [selectedItems, setSelectedItems] = useState(initItems);
+    const [newItemText, setNewItemText] = useState('');
+  
+    const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0);
+  
+    useEffect(() => {
+      setFormData(prev => ({ ...prev, price: totalPrice || prev.price }));
+    }, [totalPrice]);
+  
+    const addItem = () => {
+      const match = menuItems.find(m => `${m.name} (${Number(m.price).toLocaleString()} R)` === newItemText);
+      if (!match) return;
+      setSelectedItems(prev => [...prev, { menu_item_id: match.id, quantity: 1, price: match.price, id: Date.now() + Math.random() }]);
+      setNewItemText('');
+    };
+  
+    const removeItem = (uid) => {
     setSelectedItems(prev => prev.filter(i => i.id !== uid));
   };
 
@@ -94,9 +92,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   const foodItems = menuItems.filter(m => m.type !== 'dessert');
   const dessertItems = menuItems.filter(m => m.type === 'dessert');
-  const filteredFood = foodItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredDessert = dessertItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  const riceItem = menuItems.find(m => m.is_rice);
+    const riceItem = menuItems.find(m => m.is_rice);
   const hasRice = selectedItems.some(si => riceItem && si.menu_item_id === riceItem.id);
 
   const toggleRice = () => {
@@ -195,27 +191,25 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           </label>
         )}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <select value={newItemId} onChange={(e) => setNewItemId(e.target.value)} style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', outline: 'none' }}>
-            <option value="">- Add item -</option>
-            {filteredFood.length > 0 && <optgroup label="Food" />}
-            {filteredFood.map(m => (
-              <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-            ))}
-            {filteredDessert.length > 0 && <optgroup label="Dessert" />}
-            {filteredDessert.map(m => (
-              <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-            ))}
-          </select>
-          <button type="button" className="btn btn-primary btn-sm" onClick={addItem}>+</button>
-        </div>
-        <div style={{ marginBottom: '0.5rem' }}>
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search items..."
-            style={{ width: '100%', padding: '0.4rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.85rem', outline: 'none' }}
+            list="food-items-list"
+            value={newItemText}
+            onChange={(e) => setNewItemText(e.target.value)}
+            placeholder="Search and add item..."
+            style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', outline: 'none' }}
           />
+          <datalist id="food-items-list">
+            {foodItems.length > 0 && <optgroup label="Food" />}
+            {foodItems.map(m => (
+              <option key={m.id} value={`${m.name} (${Number(m.price).toLocaleString()} R)`} />
+            ))}
+            {dessertItems.length > 0 && <optgroup label="Dessert" />}
+            {dessertItems.map(m => (
+              <option key={m.id} value={`${m.name} (${Number(m.price).toLocaleString()} R)`} />
+            ))}
+          </datalist>
+          <button type="button" className="btn btn-primary btn-sm" onClick={addItem}>+</button>
         </div>
 
         {selectedItems.length > 0 && (
