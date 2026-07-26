@@ -69,6 +69,20 @@ function AppContent() {
     localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data && e.data.type === 'NAVIGATE' && e.data.url) {
+        if (window.location.hash) {
+          window.location.hash = `#${e.data.url}`;
+        } else {
+          window.location.href = window.location.origin + e.data.url;
+        }
+      }
+    };
+    navigator.serviceWorker?.addEventListener('message', handler);
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
+  }, []);
+
   const notify = (title, body, tag, url) => {
     if (localStorage.getItem('notificationsEnabled') === 'false') return;
     if (Notification.permission !== 'granted') return;
