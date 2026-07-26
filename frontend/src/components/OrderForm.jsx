@@ -199,7 +199,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
                   <span style={{ color: '#6b7280' }}>
                     <select value={si.quantity} onChange={(e) => updateQty(si.id, Number(e.target.value))} style={{ padding: '0.1rem 0.3rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.8rem' }}>
                       {[1,2,3,4,5].map(q => <option key={q} value={q}>{q}</option>)}
-                    </select>
+                    </select>{' '}
                     × {Number(si.price).toLocaleString()} R = <strong>{(Number(si.price) * si.quantity).toLocaleString()} R</strong>
                   </span>
                   <button type="button" onClick={() => removeItem(si.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }}>×</button>
