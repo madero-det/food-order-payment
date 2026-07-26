@@ -199,9 +199,24 @@ export default function Persons({ user, onUserUpdate }) {
                   <div className="person-card-name" onClick={() => navigate(`/person-orders?person_id=${p.id}`)}>
                     {p.name}
                   </div>
-                  <span className="badge" style={{ background: p.role === 'admin' ? '#d97706' : '#6b7280', color: '#fff', fontSize: '0.65rem', alignSelf: 'flex-start' }}>
-                    {p.role === 'admin' ? 'Admin' : 'User'}
-                  </span>
+                  <div className="person-card-role-row">
+                    <span className="badge" style={{ background: p.role === 'admin' ? '#d97706' : '#6b7280', color: '#fff', fontSize: '0.65rem' }}>
+                      {p.role === 'admin' ? 'Admin' : 'User'}
+                    </span>
+                    {isAdmin && (
+                      <div className="person-card-actions">
+                        <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => { setEditingPerson(p); setShowForm(true); }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                        <button className="btn btn-ghost btn-sm" title="Reset Password" onClick={() => { setResetModal(p); setNewPwd(''); setConfirmPwd(''); setPwdError(''); setPwdSuccess(''); }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </button>
+                        <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => handleDelete(p.id)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="person-card-sub">
                     <span style={{ color: '#6b7280' }}>
                       {p.profile_image ? 'Click avatar to preview' : 'No profile photo'}
@@ -210,19 +225,6 @@ export default function Persons({ user, onUserUpdate }) {
                       <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewSrc(getImageUrl(p.profile_image)); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}>Preview</button>
                     )}
                   </div>
-                  {isAdmin && (
-                    <div className="person-card-actions">
-                      <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => { setEditingPerson(p); setShowForm(true); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                      </button>
-                      <button className="btn btn-ghost btn-sm" title="Reset Password" onClick={() => { setResetModal(p); setNewPwd(''); setConfirmPwd(''); setPwdError(''); setPwdSuccess(''); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                      </button>
-                      <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => handleDelete(p.id)}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
