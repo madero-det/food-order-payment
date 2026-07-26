@@ -103,30 +103,29 @@ export default function Settings({ onUserUpdate }) {
         <h1>Settings</h1>
       </div>
 
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem' }}>
-        <div className="avatar-upload">
+      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="avatar-upload" onClick={handleAvatarClick}>
           {avatarUrl ? (
-            <img src={avatarUrl} alt={user.name} className="avatar" style={{ width: 80, height: 80 }} />
+            <img src={avatarUrl} alt={user.name} className="avatar" style={{ width: 64, height: 64 }} />
           ) : (
-            <div className="avatar avatar-initials" style={{ width: 80, height: 80, fontSize: '1.5rem' }}>
+            <div className="avatar avatar-initials" style={{ width: 64, height: 64, fontSize: '1.3rem' }}>
               {getInitials(user.name)}
             </div>
           )}
           <div className="settings-avatar-hover">
-            <button type="button" onClick={(e) => { e.stopPropagation(); handleAvatarClick(); }} title="Edit">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </button>
-            {avatarUrl && (
-              <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} title="Preview">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            )}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
         </div>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#6b7280' }}>
-          Hover and click to edit or preview
-        </p>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{user.name}</div>
+          <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            Click avatar to change
+            {avatarUrl && (
+              <span> · <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>Preview</button></span>
+            )}
+          </div>
+        </div>
       </div>
 
       {cropSrc && <CropModal imageSrc={cropSrc} onCrop={handleCrop} onCancel={() => setCropSrc(null)} />}
