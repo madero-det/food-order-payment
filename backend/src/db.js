@@ -117,6 +117,18 @@ export const initDB = async () => {
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
 
+      DO $$ BEGIN
+        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS menu_item_id INTEGER;
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      CREATE TABLE IF NOT EXISTS menu_items (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        price INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
       CREATE TABLE IF NOT EXISTS notifications (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES persons(id) ON DELETE CASCADE,

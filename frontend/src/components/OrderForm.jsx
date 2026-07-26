@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function OrderForm({ persons, onSubmit, initialData = {}, onCancel, isAdmin = true, isEditing = false }) {
+export default function OrderForm({ persons, menuItems = [], onSubmit, initialData = {}, onCancel, isAdmin = true, isEditing = false }) {
   const toDateInput = (val) => {
     if (!val) return '';
     const m = String(val).match(/^(\d{4}-\d{2}-\d{2})/);
@@ -45,6 +45,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
     transaction_date: toDatetimeInput(initialData.transaction_date),
     notes: initialData.notes || '',
     payment_method: initialData.payment_method || '',
+    menu_item_id: initialData.menu_item_id ? String(initialData.menu_item_id) : '',
   });
 
   const handleSubmit = (e) => {
@@ -57,6 +58,7 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
       transaction_date: formData.transaction_date || null,
       notes: formData.notes || null,
       payment_method: formData.payment_method || null,
+      menu_item_id: formData.menu_item_id ? Number(formData.menu_item_id) : null,
     };
     onSubmit(data);
   };
@@ -92,13 +94,31 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
             </select>
           </div>
           <div className="form-group">
+            <label>Food Item</label>
+            <select
+              value={formData.menu_item_id}
+              onChange={(e) => {
+                const mid = e.target.value;
+                const item = mid ? menuItems.find(m => m.id === Number(mid)) : null;
+                setFormData({ ...formData, menu_item_id: mid, price: item ? String(item.price) : formData.price });
+              }}
+            >
+              <option value="">- Manual price -</option>
+              {menuItems.map((m) => (
+                <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
             <label>Price (Riel)</label>
             <input
               type="number"
               min="0"
               step="100"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value, menu_item_id: '' })}
+              readOnly={!!formData.menu_item_id}
+              style={!!formData.menu_item_id ? { background: '#f3f4f6', cursor: 'not-allowed' } : undefined}
               required
             />
           </div>
@@ -135,6 +155,22 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
             />
           </div>
           <div className="form-group">
+            <label>Food Item</label>
+            <select
+              value={formData.menu_item_id}
+              onChange={(e) => {
+                const mid = e.target.value;
+                const item = mid ? menuItems.find(m => m.id === Number(mid)) : null;
+                setFormData({ ...formData, menu_item_id: mid, price: item ? String(item.price) : formData.price });
+              }}
+            >
+              <option value="">- Manual price -</option>
+              {menuItems.map((m) => (
+                <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
             <label>Price (Riel)</label>
             {isEditing ? (
               <input
@@ -149,7 +185,9 @@ export default function OrderForm({ persons, onSubmit, initialData = {}, onCance
                 min="0"
                 step="100"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value, menu_item_id: '' })}
+                readOnly={!!formData.menu_item_id}
+                style={!!formData.menu_item_id ? { background: '#f3f4f6', cursor: 'not-allowed' } : undefined}
                 required
               />
             )}

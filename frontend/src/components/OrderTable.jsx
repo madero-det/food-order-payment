@@ -118,6 +118,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
                   </div>
                 )}
                 <strong>{order.person_name}</strong>
+                {order.menu_item_name && <div style={{ fontSize: '0.72rem', color: '#2563eb', marginTop: 1 }}>{order.menu_item_name}</div>}
                 {order.notes && <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 1 }}>{order.notes}</div>}
               </div>
             </td>

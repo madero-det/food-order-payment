@@ -16,6 +16,7 @@ export default function DailyOrders() {
   const [date, setDate] = useState(initialDate);
   const [orders, setOrders] = useState([]);
   const [persons, setPersons] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +53,7 @@ export default function DailyOrders() {
 
   useEffect(() => {
     fetchPersons();
+    api.getMenuItems().then(setMenuItems).catch(() => {});
   }, []);
 
   useSSE((event, data) => {
@@ -72,6 +74,7 @@ export default function DailyOrders() {
           person_avatar: data.person_avatar || null,
           notes: data.notes || null,
           payment_method: data.payment_method || null,
+          menu_item_name: data.menu_item_name || null,
         }]);
       }
     } else if (event === 'order_updated') {
@@ -87,6 +90,7 @@ export default function DailyOrders() {
           person_name: data.person_name ?? o.person_name,
           notes: data.notes !== undefined ? data.notes : o.notes,
           payment_method: data.payment_method !== undefined ? data.payment_method : o.payment_method,
+          menu_item_name: data.menu_item_name !== undefined ? data.menu_item_name : o.menu_item_name,
         } : o));
       }
     } else if (event === 'order_deleted') {
@@ -134,6 +138,7 @@ export default function DailyOrders() {
           person_avatar: result.person_avatar || null,
           notes: result.notes || null,
           payment_method: result.payment_method || null,
+          menu_item_name: result.menu_item_name || null,
         }]);
       }
     } catch (err) {
@@ -157,6 +162,7 @@ export default function DailyOrders() {
           person_name: result.person_name ?? o.person_name,
           notes: result.notes !== undefined ? result.notes : o.notes,
           payment_method: result.payment_method !== undefined ? result.payment_method : o.payment_method,
+          menu_item_name: result.menu_item_name !== undefined ? result.menu_item_name : o.menu_item_name,
         } : o));
     } catch (err) {
       alert(err.message);
@@ -318,6 +324,7 @@ export default function DailyOrders() {
           <div className="order-form-area">
             <OrderForm
               persons={persons}
+              menuItems={menuItems}
               onSubmit={editingOrder ? handleUpdate : handleCreate}
               initialData={editingOrder || { order_date: date, person_id: isAdmin ? '' : user.id }}
               onCancel={handleCancel}

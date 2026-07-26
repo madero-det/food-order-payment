@@ -33,6 +33,7 @@ import Persons from './pages/Persons';
 import PersonOrders from './pages/PersonOrders';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
+import MenuPage from './pages/MenuPage';
 import { ToastProvider, useToast } from './components/Toast';
 import { api, getImageUrl } from './api/client';
 import useSSE from './hooks/useSSE';
@@ -203,6 +204,9 @@ function AppContent() {
             {user.role === 'admin' && (
               <NavLink to="/persons" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>Persons</NavLink>
             )}
+            {user.role === 'admin' && (
+              <NavLink to="/menu" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>Menu</NavLink>
+            )}
           </div>
           <div className="nav-right">
             <NavbarAvatar user={user} />
@@ -244,6 +248,7 @@ function AppContent() {
             <Route path="/person-orders" element={<PersonOrders />} />
             <Route path="/notifications" element={<Notifications onCountChange={setUnreadCount} />} />
             <Route path="/settings" element={<Settings onUserUpdate={setUser} />} />
+            <Route path="/menu" element={<MenuPage />} />
           </Routes>
         </main>
       </div>

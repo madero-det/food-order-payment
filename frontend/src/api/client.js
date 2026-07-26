@@ -58,6 +58,11 @@ export const api = {
   updatePerson: (id, data) => request(`/persons/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePerson: (id) => request(`/persons/${id}`, { method: 'DELETE' }),
 
+  getMenuItems: () => request('/menu'),
+  createMenuItem: (data) => request('/menu', { method: 'POST', body: JSON.stringify(data) }),
+  updateMenuItem: (id, data) => request(`/menu/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteMenuItem: (id) => request(`/menu/${id}`, { method: 'DELETE' }),
+
   getDashboard: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
     return request(`/dashboard${qs ? '?' + qs : ''}`);

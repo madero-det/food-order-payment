@@ -11,6 +11,7 @@ import personsRouter from './routes/persons.js';
 import dashboardRouter from './routes/dashboard.js';
 import sseRouter from './routes/sse.js';
 import notificationsRouter from './routes/notifications.js';
+import menuRouter from './routes/menu.js';
 import { authenticate } from './middleware/auth.js';
 import errorHandler from './middleware/errorHandler.js';
 import { startTelegramPolling, sendUnpaidReminder } from './telegram.js';
@@ -55,6 +56,7 @@ app.use('/api/persons', authenticate, personsRouter);
 app.use('/api/dashboard', authenticate, dashboardRouter);
 app.use('/api/events', authenticate, sseRouter);
 app.use('/api/notifications', authenticate, notificationsRouter);
+app.use('/api/menu', authenticate, menuRouter);
 
 app.use(errorHandler);
 
