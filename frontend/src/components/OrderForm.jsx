@@ -53,6 +53,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   const [selectedItems, setSelectedItems] = useState(initItems);
   const [newItemId, setNewItemId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0);
 
@@ -93,6 +94,8 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   const foodItems = menuItems.filter(m => m.type !== 'dessert');
   const dessertItems = menuItems.filter(m => m.type === 'dessert');
+  const filteredFood = foodItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredDessert = dessertItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const riceItem = menuItems.find(m => m.is_rice);
   const hasRice = selectedItems.some(si => riceItem && si.menu_item_id === riceItem.id);
 
@@ -194,16 +197,25 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <select value={newItemId} onChange={(e) => setNewItemId(e.target.value)} style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', outline: 'none' }}>
             <option value="">- Add item -</option>
-            {foodItems.length > 0 && <optgroup label="Food" />}
-            {foodItems.map(m => (
+            {filteredFood.length > 0 && <optgroup label="Food" />}
+            {filteredFood.map(m => (
               <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
             ))}
-            {dessertItems.length > 0 && <optgroup label="Dessert" />}
-            {dessertItems.map(m => (
+            {filteredDessert.length > 0 && <optgroup label="Dessert" />}
+            {filteredDessert.map(m => (
               <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
             ))}
           </select>
           <button type="button" className="btn btn-primary btn-sm" onClick={addItem}>+</button>
+        </div>
+        <div style={{ marginBottom: '0.5rem' }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search items..."
+            style={{ width: '100%', padding: '0.4rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.85rem', outline: 'none' }}
+          />
         </div>
 
         {selectedItems.length > 0 && (
