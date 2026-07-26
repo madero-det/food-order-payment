@@ -38,15 +38,18 @@ Telegram Bot (Payment/Deletion Approvals)
 
 ## Features
 
-- **Dashboard:** Monthly stats, daily chart, by-person breakdown, today's orders
-- **Daily Orders:** Add/edit/delete orders, pay with datetime, bulk actions
+- **Dashboard:** Monthly stats, line charts, by-person breakdown, today's orders, Excel export
+- **Daily Orders:** Add/edit/delete orders, pay with datetime, notes & payment method
 - **Person Orders:** Pagination (web) / Infinite scroll (mobile), date range filter
-- **Persons Management:** Admin CRUD, avatar upload, role management
-- **Notifications:** Bell icon with unread badge, in-app history, push + toast alerts
+- **Persons Management:** Admin CRUD, avatar upload, role management, default price presets
+- **Notifications:** Bell icon with unread badge, in-app history, push + toast alerts, SSE real-time
 - **Approval Workflow:** User pays → pending → Telegram → admin approve → approved
 - **Deletion Workflow:** User requests → pending → admin approve/cancel
+- **Dark Mode:** Toggle in navbar, persists to localStorage
+- **PWA Support:** Install to home screen from browser, works offline
 - **Mobile Apps:** Android APK and iOS IPA via Capacitor
 - **Responsive:** Desktop table layout, mobile card layout with hamburger menu
+- **Telegram:** Bot notifications for payments/deletions, daily 8 PM unpaid reminder
 
 ## Access Control
 

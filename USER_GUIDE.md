@@ -28,7 +28,9 @@ Shows current month statistics:
 - **Unpaid Amount** — amount still outstanding
 
 ### Today's Orders *(all users)*
-Shows all orders placed today. Columns: #, Name, Price, Paid, Payment Status.
+Shows all orders placed today. Columns: #, Avatar, Name, Price, Paid, Payment Status.
+- **Mobile**: Card layout with avatar, name, price, paid, and method
+- **Desktop**: Table with avatars and notes displayed under names
 
 ### Daily Expense Chart
 Line chart showing daily totals for the selected month. Hover for exact values. Use month/year selectors to view different periods.
@@ -40,7 +42,10 @@ Line chart showing month-by-month totals for the current year.
 Clickable table showing each day's order count, total, and paid amount. Click a row to go to that day's orders.
 
 ### By Person *(admin only)*
-Table showing each person's order count, unpaid count, and total spent. Click a row to view that person's order history.
+Table showing each person's avatar, name, order count, unpaid count, and total spent. Click a row to view that person's order history.
+
+### Export to Excel
+Click the **Export Excel** button on the Dashboard to download monthly orders as a spreadsheet. Includes: Date, Person, Price, Paid, Transaction Date, Status, Method, Notes.
 
 ---
 
@@ -55,9 +60,11 @@ Manage daily orders. Accessible from the sidebar: **Orders**.
 
 ### Creating an Order
 1. Click **+ New Order**
-2. Select the **person** (admin only), enter **price**
-3. Optionally enter **paid amount** and **transaction date**
-4. Click **Save**
+2. Select the **person** (admin only), enter **price** (auto-fills from default price if set)
+3. Optionally add **Notes** (e.g., menu item, special requests)
+4. Select **Payment Method** (Cash or Bank Transfer)
+5. Optionally enter **paid amount** and **transaction date**
+6. Click **Save**
 
 ### Editing an Order
 1. Click the **pencil icon** on any order
@@ -181,17 +188,21 @@ Toggle browser push notifications on/off. When enabled:
 
 **To disable:** Click the toggle to turn it off. Preference is saved and persists across sessions.
 
+### Dark Mode
+Click the **sun/moon icon** in the navbar to toggle dark mode. Preference is saved and persists across sessions.
+
 ---
 
 ## Mobile App
 
 ### Installation
-Download the APK (Android) or IPA (iOS) from the project repository.
+Download the APK (Android) or IPA (iOS) from the project repository. Or install directly from the browser as a Progressive Web App (PWA) — tap "Add to Home Screen" in your browser menu.
 
 ### Differences from Web
 - Same functionality as web version
 - Push notifications via browser/webview
 - Optimized for touch: card layout on small screens, hamburger menu
+- Safe area insets for notched devices
 - Safe area insets for notched devices
 
 ### Network
