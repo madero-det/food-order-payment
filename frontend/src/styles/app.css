@@ -1149,3 +1149,9 @@ body.dark,
   --notif-unread-bg: #1e3a5f;
   background: #1e3a5f;
 }
+
+.dark input:disabled,
+.dark select:disabled {
+  background: #374151 !important;
+  color: #6b7280;
+}
