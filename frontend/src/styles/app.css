@@ -1083,15 +1083,20 @@ body.dark,
 .person-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 0.5rem;
-  padding: 1.25rem 1rem;
-  text-align: center;
+  padding: 1rem;
 }
 
-.person-card-avatar {
+.person-card-row {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.person-card-avatar-spacer {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .person-card-name {
