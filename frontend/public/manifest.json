@@ -1,7 +1,8 @@
 {
   "name": "Food Order Payment",
   "short_name": "Food Orders",
-  "start_url": "/",
+  "start_url": "/?pwa=true",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#16213e",
