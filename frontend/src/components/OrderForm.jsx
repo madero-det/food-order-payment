@@ -194,7 +194,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
             {selectedItems.map((si) => {
               const mi = menuItems.find(m => m.id === Number(si.menu_item_id));
               return (
-                <div key={si.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f3f4f6', padding: '0.35rem 0.6rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+                <div key={si.id} className="selected-item-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f3f4f6', padding: '0.35rem 0.6rem', borderRadius: '6px', fontSize: '0.85rem' }}>
                   <span style={{ flex: 1 }}>{mi?.name || 'Item'} {mi?.type === 'dessert' ? '(Dessert)' : ''}</span>
                   <span style={{ color: '#6b7280' }}>
                     <select value={si.quantity} onChange={(e) => updateQty(si.id, Number(e.target.value))} style={{ padding: '0.1rem 0.3rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.8rem' }}>

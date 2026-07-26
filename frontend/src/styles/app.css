@@ -1074,3 +1074,13 @@ body.dark,
 .dark .order-form-area {
   background: #1f2937;
 }
+
+.dark .selected-item-row {
+  background: #374151 !important;
+}
+
+.dark .selected-item-row select {
+  background: #4b5563;
+  border-color: #6b7280;
+  color: #e5e7eb;
+}
