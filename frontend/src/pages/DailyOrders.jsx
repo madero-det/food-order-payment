@@ -364,7 +364,8 @@ export default function DailyOrders() {
                 value={payModal.datetime}
                 onChange={(e) => setPayModal({ ...payModal, datetime: e.target.value })}
                 disabled={payModal.isCash}
-                style={{ width: '100%', boxSizing: 'border-box', ...(payModal.isCash ? { background: '#f3f4f6', cursor: 'not-allowed' } : {}) }}
+                className={payModal.isCash ? 'input-disabled' : ''}
+                style={{ width: '100%', boxSizing: 'border-box' }}
               />
               {payModal.isCash && (
                 <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.2rem' }}>Disabled for cash payments</div>

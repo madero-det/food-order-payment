@@ -262,7 +262,8 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           value={formData.transaction_date}
           onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
           disabled={formData.payment_method === 'cash'}
-          style={{ width: '100%', ...(formData.payment_method === 'cash' ? { background: '#f3f4f6', cursor: 'not-allowed' } : {}) }}
+          className={formData.payment_method === 'cash' ? 'input-disabled' : ''}
+          style={{ width: '100%' }}
         />
         {formData.payment_method === 'cash' && (
           <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.2rem' }}>Disabled for cash payments</div>
