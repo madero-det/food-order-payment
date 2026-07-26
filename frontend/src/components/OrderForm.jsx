@@ -215,7 +215,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
                   <span style={{ flex: 1 }}>{mi?.name || 'Item'} {mi?.type === 'dessert' ? '(Dessert)' : ''}</span>
                   <span style={{ color: '#6b7280' }}>
                     <select value={si.quantity} onChange={(e) => updateQty(si.id, Number(e.target.value))} style={{ padding: '0.1rem 0.3rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.8rem' }}>
-                      {[...Array(si.menu_item_id === riceItem?.id ? 20 : 5)].map((_, i) => <option key={i + 1} value={i + 1}>{i + 1}</option>)}
+                      {[1,2,3,4,5].map(q => <option key={q} value={q}>{q}</option>)}
                     </select>{' '}
                     × {Number(si.price).toLocaleString()} R = <strong>{(Number(si.price) * si.quantity).toLocaleString()} R</strong>
                   </span>
