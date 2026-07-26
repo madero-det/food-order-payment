@@ -69,7 +69,7 @@ function AppContent() {
     localStorage.setItem('darkMode', darkMode);
   }, [darkMode]);
 
-  const notify = (title, body, tag) => {
+  const notify = (title, body, tag, url) => {
     if (localStorage.getItem('notificationsEnabled') === 'false') return;
     if (Notification.permission !== 'granted') return;
     navigator.serviceWorker.ready.then((reg) => {
@@ -80,6 +80,7 @@ function AppContent() {
         tag: tag || 'food-order-notification',
         renotify: true,
         vibrate: [200, 100, 200],
+        data: { url: url || '/' },
       });
     }).catch(() => {});
   };
@@ -107,42 +108,42 @@ function AppContent() {
       if (pid === uid) {
         const msg = `Your payment for ${Number(data.price).toLocaleString()} R has been approved!\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
         addToast(msg, 'success');
-        notify('Payment Approved', msg, `payment-${data.id}`);
+        notify('Payment Approved', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
         refreshUnread();
       } else if (user.role === 'admin' && !data.fromApproval) {
         const msg = `The payment for ${Number(data.price).toLocaleString()} R has been updated!\nName: ${data.person_name}\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
         addToast(msg, 'success');
-        notify('Payment Updated', msg, `payment-${data.id}`);
+        notify('Payment Updated', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
         refreshUnread();
       }
     } else if (event === 'payment_rejected' && pid === uid) {
       const msg = `Your payment for ${Number(data.price).toLocaleString()} R has been rejected.\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
-      addToast(msg, 'error');
-      notify('Payment Rejected', msg, `payment-${data.id}`);
-      refreshUnread();
+        addToast(msg, 'error');
+        notify('Payment Rejected', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
+        refreshUnread();
     } else if (event === 'payment_submitted') {
       if (user.role === 'admin') {
         const msg = `${data.person_name || 'User'} submitted a payment of ${Number(data.price).toLocaleString()} R for approval.\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
         addToast(msg, 'warning');
-        notify('Payment Pending Approval', msg, `payment-${data.id}`);
+        notify('Payment Pending Approval', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
         refreshUnread();
       }
     } else if (event === 'deletion_requested') {
       if (user.role === 'admin') {
         const msg = `${data.person_name || 'User'} requested to delete order #${data.id} (${Number(data.price).toLocaleString()} R).\nOrder: ${formatDate(data.order_date)}`;
         addToast(msg, 'warning');
-        notify('Delete Request Pending', msg, `deletion-${data.id}`);
+        notify('Delete Request Pending', msg, `deletion-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
         refreshUnread();
       }
     } else if (event === 'deletion_cancelled' && pid === uid) {
       const msg = `Your delete request for order #${data.id} (${Number(data.price).toLocaleString()} R) has been cancelled.`;
       addToast(msg, 'error');
-      notify('Delete Request Cancelled', msg, `deletion-${data.id}`);
+      notify('Delete Request Cancelled', msg, `deletion-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
       refreshUnread();
     } else if (event === 'deletion_approved' && pid === uid) {
       const msg = `Your delete request for order #${data.id} (${Number(data.price).toLocaleString()} R) has been approved.`;
       addToast(msg, 'success');
-      notify('Delete Request Approved', msg, `deletion-${data.id}`);
+      notify('Delete Request Approved', msg, `deletion-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
       refreshUnread();
     }
   });

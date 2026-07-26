@@ -17,6 +17,7 @@ self.addEventListener('message', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/';
   const origin = self.location.origin;
 
   e.waitUntil(
@@ -24,10 +25,11 @@ self.addEventListener('notificationclick', (e) => {
       const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
       for (const client of allClients) {
         if (client.url.startsWith(origin)) {
+          try { await client.navigate(url); } catch {}
           return client.focus();
         }
       }
-      return clients.openWindow(origin + '/');
+      return clients.openWindow(origin + url);
     })()
   );
 });
