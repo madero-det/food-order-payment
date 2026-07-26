@@ -100,10 +100,10 @@ export default function MenuPage() {
                   <option value="food">Food</option>
                   <option value="dessert">Dessert</option>
                 </select>
-              </div>
-              <div className="form-group" style={{ flex: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '1.5rem' }}>
-                <input type="checkbox" id="isRice" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 16, height: 16 }} />
-                <label htmlFor="isRice" style={{ fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>Rice</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="checkbox" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 14, height: 14 }} />
+                  Rice
+                </label>
               </div>
             </div>
             <div className="form-actions">
