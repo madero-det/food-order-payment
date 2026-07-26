@@ -155,7 +155,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
               type="text"
               value={formatDisplayDate(formData.order_date)}
               readOnly
-              style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
+              className="input-disabled"
             />
           </div>
           <div className="form-group">
@@ -164,7 +164,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
               type="text"
               value={formatPersonName(formData.person_id)}
               readOnly
-              style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
+              className="input-disabled"
             />
           </div>
           <div className="form-group">
