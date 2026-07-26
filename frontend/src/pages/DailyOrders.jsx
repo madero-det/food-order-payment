@@ -20,7 +20,7 @@ export default function DailyOrders() {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [payModal, setPayModal] = useState({ show: false, orderId: null, datetime: '' });
+  const [payModal, setPayModal] = useState({ show: false, orderId: null, datetime: '', isCash: false });
   const [deleteModal, setDeleteModal] = useState({ show: false, orderId: null });
   const [approveDeletionModal, setApproveDeletionModal] = useState({ show: false, orderId: null });
   const [cancelDeletionModal, setCancelDeletionModal] = useState({ show: false, orderId: null });
@@ -170,19 +170,21 @@ export default function DailyOrders() {
   };
 
   const openPayModal = (id) => {
+    const order = orders.find(o => o.id === id);
+    const isCash = order?.payment_method === 'cash';
     const now = new Date();
     const dt = now.getFullYear() + '-' +
       String(now.getMonth() + 1).padStart(2, '0') + '-' +
       String(now.getDate()).padStart(2, '0') + 'T' +
       String(now.getHours()).padStart(2, '0') + ':' +
       String(now.getMinutes()).padStart(2, '0');
-    setPayModal({ show: true, orderId: id, datetime: dt });
+    setPayModal({ show: true, orderId: id, datetime: dt, isCash });
   };
 
   const confirmPay = async () => {
     try {
       const result = await api.payOrder(payModal.orderId, { transaction_date: payModal.datetime });
-      setPayModal({ show: false, orderId: null, datetime: '' });
+      setPayModal({ show: false, orderId: null, datetime: '', isCash: false });
       setOrders(prev => prev.map(o => o.id === result.id ? {
         ...o,
         paid_amount: result.paid_amount != null ? Number(result.paid_amount) : null,
@@ -361,11 +363,15 @@ export default function DailyOrders() {
                 type="datetime-local"
                 value={payModal.datetime}
                 onChange={(e) => setPayModal({ ...payModal, datetime: e.target.value })}
-                style={{ width: '100%', boxSizing: 'border-box' }}
+                disabled={payModal.isCash}
+                style={{ width: '100%', boxSizing: 'border-box', ...(payModal.isCash ? { background: '#f3f4f6', cursor: 'not-allowed' } : {}) }}
               />
+              {payModal.isCash && (
+                <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.2rem' }}>Disabled for cash payments</div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-              <button className="btn btn-ghost" onClick={() => setPayModal({ show: false, orderId: null, datetime: '' })}>Cancel</button>
+              <button className="btn btn-ghost" onClick={() => setPayModal({ show: false, orderId: null, datetime: '', isCash: false })}>Cancel</button>
               <button className="btn btn-success" onClick={confirmPay}>Confirm Pay</button>
             </div>
           </div>
