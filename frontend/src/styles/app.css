@@ -990,6 +990,18 @@ body.dark,
   color: #e5e7eb;
 }
 
+.dark select {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark select option,
+.dark select optgroup {
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
 .dark .form-group input:focus,
 .dark .form-group select:focus {
   border-color: #3b82f6;
