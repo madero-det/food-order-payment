@@ -186,24 +186,29 @@ export default function Persons({ user, onUserUpdate }) {
           <div className="persons-grid">
             {persons.map((p) => (
               <div className="person-card card" key={p.id}>
-                <div onClick={(e) => { e.stopPropagation(); if (p.profile_image) setPreviewSrc(getImageUrl(p.profile_image)); }} style={{ cursor: p.profile_image ? 'pointer' : 'default' }}>
-                  <PersonAvatar
-                    src={getImageUrl(p.profile_image)}
-                    name={p.name}
-                    personId={p.id}
-                    canEdit={isAdmin || p.id === user.id}
-                    onUploaded={handleAvatarUploaded}
-                  />
+                <div className="person-card-avatar-wrap" onClick={(e) => { e.stopPropagation(); if (p.profile_image) setPreviewSrc(getImageUrl(p.profile_image)); }} style={{ cursor: p.profile_image ? 'pointer' : 'default' }}>
+                  {p.profile_image ? (
+                    <img src={getImageUrl(p.profile_image)} alt={p.name} className="avatar" style={{ width: 48, height: 48 }} />
+                  ) : (
+                    <div className="avatar avatar-initials" style={{ width: 48, height: 48, fontSize: '1rem' }}>
+                      {p.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div className="person-card-info">
                   <div className="person-card-name" onClick={() => navigate(`/person-orders?person_id=${p.id}`)}>
                     {p.name}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    <span className="badge" style={{ background: p.role === 'admin' ? '#d97706' : '#6b7280', color: '#fff', fontSize: '0.65rem', marginRight: '0.35rem' }}>
+                  <div className="person-card-sub">
+                    <span className="badge" style={{ background: p.role === 'admin' ? '#d97706' : '#6b7280', color: '#fff', fontSize: '0.65rem' }}>
                       {p.role === 'admin' ? 'Admin' : 'User'}
                     </span>
-                    {p.profile_image ? 'Click avatar to preview' : 'No profile photo'}
+                    <span style={{ color: '#6b7280' }}>
+                      {p.profile_image ? 'Click avatar to preview' : 'No profile photo'}
+                    </span>
+                    {p.profile_image && (
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewSrc(getImageUrl(p.profile_image)); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}>Preview</button>
+                    )}
                   </div>
                 </div>
                 {isAdmin && (
