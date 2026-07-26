@@ -63,6 +63,15 @@ export default function MenuPage() {
     }
   };
 
+  const handleToggleAvailable = async (item) => {
+    try {
+      await api.updateMenuItem(item.id, { name: item.name, price: Number(item.price), type: item.type, is_rice: item.is_rice, is_available: item.is_available === false });
+      fetchItems();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleCancel = () => {
     setEditingId(null);
     setName('');
@@ -146,7 +155,11 @@ export default function MenuPage() {
                   <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
                   <td>{Number(item.price).toLocaleString()} R</td>
                   <td>
-                    <span className={`badge ${item.is_available !== false ? 'badge-paid' : 'badge-unpaid'}`} style={{ fontSize: '0.65rem' }}>
+                    <span
+                      className={`badge ${item.is_available !== false ? 'badge-paid' : 'badge-unpaid'}`}
+                      style={{ fontSize: '0.65rem', cursor: 'pointer' }}
+                      onClick={() => handleToggleAvailable(item)}
+                    >
                       {item.is_available !== false ? 'Yes' : 'No'}
                     </span>
                   </td>
