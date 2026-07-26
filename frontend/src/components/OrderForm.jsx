@@ -93,7 +93,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   const foodItems = menuItems.filter(m => m.type !== 'dessert');
   const dessertItems = menuItems.filter(m => m.type === 'dessert');
-  const riceItem = menuItems.find(m => m.name.toLowerCase().includes('rice') || m.name.includes('\u1794\u17B6\u1799'));
+  const riceItem = menuItems.find(m => m.is_rice);
   const hasRice = selectedItems.some(si => riceItem && si.menu_item_id === riceItem.id);
 
   const toggleRice = () => {

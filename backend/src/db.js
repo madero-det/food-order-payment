@@ -135,6 +135,11 @@ export const initDB = async () => {
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
 
+      DO $$ BEGIN
+        ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_rice BOOLEAN DEFAULT false;
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
       CREATE TABLE IF NOT EXISTS order_items (
         id SERIAL PRIMARY KEY,
         order_id INTEGER NOT NULL REFERENCES food_orders(id) ON DELETE CASCADE,

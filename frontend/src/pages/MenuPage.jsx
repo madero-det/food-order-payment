@@ -8,6 +8,7 @@ export default function MenuPage() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [type, setType] = useState('food');
+  const [isRice, setIsRice] = useState(false);
   const [error, setError] = useState('');
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
@@ -28,9 +29,9 @@ export default function MenuPage() {
     if (!name.trim() || !price) return setError('Name and price are required');
     try {
       if (editingId === 'new') {
-        await api.createMenuItem({ name, price: Number(price), type });
+        await api.createMenuItem({ name, price: Number(price), type, is_rice: isRice });
       } else {
-        await api.updateMenuItem(editingId, { name, price: Number(price), type });
+        await api.updateMenuItem(editingId, { name, price: Number(price), type, is_rice: isRice });
       }
       setName('');
       setPrice('');
@@ -46,6 +47,7 @@ export default function MenuPage() {
     setName(item.name);
     setPrice(String(item.price));
     setType(item.type || 'food');
+    setIsRice(item.is_rice || false);
     setError('');
   };
 
@@ -64,6 +66,7 @@ export default function MenuPage() {
     setName('');
     setPrice('');
     setType('food');
+    setIsRice(false);
     setError('');
   };
 
@@ -97,6 +100,10 @@ export default function MenuPage() {
                   <option value="food">Food</option>
                   <option value="dessert">Dessert</option>
                 </select>
+              </div>
+              <div className="form-group" style={{ flex: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', paddingTop: '1.5rem' }}>
+                <input type="checkbox" id="isRice" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 16, height: 16 }} />
+                <label htmlFor="isRice" style={{ fontSize: '0.85rem', cursor: 'pointer', margin: 0 }}>Rice</label>
               </div>
             </div>
             <div className="form-actions">
