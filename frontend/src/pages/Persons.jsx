@@ -196,12 +196,15 @@ export default function Persons({ user, onUserUpdate }) {
                   />
                 </div>
                 <div className="person-card-info">
-                  <span className="person-card-name" onClick={() => navigate(`/person-orders?person_id=${p.id}`)}>
+                  <div className="person-card-name" onClick={() => navigate(`/person-orders?person_id=${p.id}`)}>
                     {p.name}
-                  </span>
-                  <span className="badge" style={{ background: p.role === 'admin' ? '#d97706' : '#6b7280', color: '#fff', fontSize: '0.7rem' }}>
-                    {p.role === 'admin' ? 'Admin' : 'User'}
-                  </span>
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                    <span className="badge" style={{ background: p.role === 'admin' ? '#d97706' : '#6b7280', color: '#fff', fontSize: '0.65rem', marginRight: '0.35rem' }}>
+                      {p.role === 'admin' ? 'Admin' : 'User'}
+                    </span>
+                    {p.profile_image ? 'Click avatar to preview' : 'No profile photo'}
+                  </div>
                 </div>
                 {isAdmin && (
                   <div className="person-card-actions">
