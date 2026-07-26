@@ -236,6 +236,16 @@ tr:hover {
   -moz-appearance: none;
 }
 
+.form-group input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  -webkit-appearance: auto;
+  -moz-appearance: auto;
+  appearance: auto;
+}
+
 .datetime-input input,
 .datetime-input select {
   width: auto;
