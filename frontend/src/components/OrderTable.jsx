@@ -134,8 +134,10 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
               ) : '-'}
             </td>
             <td>
-              <div>{formatRiel(order.price)}</div>
-              {order.payment_method && <span className="badge" style={{ background: order.payment_method === 'cash' ? '#dbeafe' : '#d1fae5', color: order.payment_method === 'cash' ? '#1e40af' : '#065f46', fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginTop: 2 }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span>{formatRiel(order.price)}</span>
+                {order.payment_method && <span className="badge" style={{ background: order.payment_method === 'cash' ? '#dbeafe' : '#d1fae5', color: order.payment_method === 'cash' ? '#1e40af' : '#065f46', fontSize: '0.6rem', padding: '0.1rem 0.35rem', whiteSpace: 'nowrap' }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>}
+              </div>
             </td>
             <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
             <td className="hide-mobile">{formatDate(order.transaction_date)}</td>
