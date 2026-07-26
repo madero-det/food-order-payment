@@ -117,13 +117,15 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
                     {getInitials(order.person_name)}
                   </div>
                 )}
-                <strong>{order.person_name}</strong>
-                {order.items && order.items.length > 0 && (
-                  <div style={{ fontSize: '0.72rem', color: '#2563eb', marginTop: 1 }}>
-                    {order.items.map(i => i.name).join(', ')}
-                  </div>
-                )}
-                {order.notes && <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 1 }}>{order.notes}</div>}
+                <div>
+                  <strong>{order.person_name}</strong>
+                  {order.items && order.items.length > 0 && (
+                    <div style={{ fontSize: '0.72rem', color: '#2563eb', marginTop: 1 }}>
+                      {order.items.map(i => i.name).join(', ')}
+                    </div>
+                  )}
+                  {order.notes && <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 1 }}>{order.notes}</div>}
+                </div>
               </div>
             </td>
             <td>
@@ -158,6 +160,12 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
             {renderBadges(order)}
           </div>
             <div className="order-card-body">
+            {order.items && order.items.length > 0 && (
+              <div className="order-card-row">
+                <span className="label">Items</span>
+                <span className="value" style={{ color: '#2563eb' }}>{order.items.map(i => i.name).join(', ')}</span>
+              </div>
+            )}
             {order.notes && (
               <div className="order-card-row">
                 <span className="label">Notes</span>
