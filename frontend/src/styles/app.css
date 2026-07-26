@@ -1066,6 +1066,14 @@ body.dark,
   color: #e5e7eb;
 }
 
+.dark .btn-ghost.btn-danger {
+  color: #f87171;
+}
+
+.dark .btn-ghost.btn-danger:hover {
+  background: #450a0a;
+}
+
 .dark .badge-unpaid {
   background: #7f1d1d;
   color: #fca5a5;
