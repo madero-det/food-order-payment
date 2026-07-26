@@ -9,6 +9,7 @@ export default function MenuPage() {
   const [price, setPrice] = useState('');
   const [type, setType] = useState('food');
   const [isRice, setIsRice] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(true);
   const [error, setError] = useState('');
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
@@ -29,9 +30,9 @@ export default function MenuPage() {
     if (!name.trim() || !price) return setError('Name and price are required');
     try {
       if (editingId === 'new') {
-        await api.createMenuItem({ name, price: Number(price), type, is_rice: isRice });
+        await api.createMenuItem({ name, price: Number(price), type, is_rice: isRice, is_available: isAvailable });
       } else {
-        await api.updateMenuItem(editingId, { name, price: Number(price), type, is_rice: isRice });
+        await api.updateMenuItem(editingId, { name, price: Number(price), type, is_rice: isRice, is_available: isAvailable });
       }
       setName('');
       setPrice('');
@@ -48,6 +49,7 @@ export default function MenuPage() {
     setPrice(String(item.price));
     setType(item.type || 'food');
     setIsRice(item.is_rice || false);
+    setIsAvailable(item.is_available !== false);
     setError('');
   };
 
@@ -67,6 +69,7 @@ export default function MenuPage() {
     setPrice('');
     setType('food');
     setIsRice(false);
+    setIsAvailable(true);
     setError('');
   };
 
@@ -104,6 +107,10 @@ export default function MenuPage() {
                   <input type="checkbox" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
                   Rice
                 </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.3rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <input type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
+                  Available
+                </label>
               </div>
             </div>
             <div className="form-actions">
@@ -127,6 +134,7 @@ export default function MenuPage() {
                 <th>Name</th>
                 <th>Type</th>
                 <th>Price</th>
+                <th>Avail</th>
                 <th className="text-right">Actions</th>
               </tr>
             </thead>
@@ -137,6 +145,11 @@ export default function MenuPage() {
                   <td><strong>{item.name}</strong></td>
                   <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
                   <td>{Number(item.price).toLocaleString()} R</td>
+                  <td>
+                    <span className={`badge ${item.is_available !== false ? 'badge-paid' : 'badge-unpaid'}`} style={{ fontSize: '0.65rem' }}>
+                      {item.is_available !== false ? 'Yes' : 'No'}
+                    </span>
+                  </td>
                   <td>
                     <div className="table-actions">
                       <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => handleEdit(item)}>
