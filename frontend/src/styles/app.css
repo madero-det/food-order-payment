@@ -1096,3 +1096,11 @@ body.dark,
   border-color: #6b7280;
   color: #e5e7eb;
 }
+
+.food-total {
+  color: #1a1a2e;
+}
+
+.dark .food-total {
+  color: #e5e7eb;
+}
