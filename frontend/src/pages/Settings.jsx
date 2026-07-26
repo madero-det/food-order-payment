@@ -23,6 +23,7 @@ export default function Settings({ onUserUpdate }) {
     if (stored !== null) return stored === 'true' ? 'granted' : 'denied';
     return typeof Notification !== 'undefined' ? Notification.permission : 'denied';
   });
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,7 +104,7 @@ export default function Settings({ onUserUpdate }) {
       </div>
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem' }}>
-        <div className="avatar-upload" onClick={handleAvatarClick}>
+        <div className="avatar-upload">
           {avatarUrl ? (
             <img src={avatarUrl} alt={user.name} className="avatar" style={{ width: 80, height: 80 }} />
           ) : (
@@ -112,12 +113,19 @@ export default function Settings({ onUserUpdate }) {
             </div>
           )}
           <div className="settings-avatar-hover">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <button type="button" onClick={(e) => { e.stopPropagation(); handleAvatarClick(); }} title="Edit">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+            {avatarUrl && (
+              <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} title="Preview">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
         </div>
         <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: '#6b7280' }}>
-          Click to change profile picture
+          Hover and click to edit or preview
         </p>
       </div>
 
@@ -186,6 +194,17 @@ export default function Settings({ onUserUpdate }) {
           </div>
         </form>
       </div>
+
+      {previewOpen && avatarUrl && (
+        <div className="modal-overlay" onClick={() => setPreviewOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', padding: '0.5rem' }}>
+            <img src={avatarUrl} alt={user.name} style={{ width: '100%', borderRadius: '8px' }} />
+            <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setPreviewOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
