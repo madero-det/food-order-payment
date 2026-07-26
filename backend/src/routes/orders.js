@@ -212,7 +212,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const isAdmin = req.user.role === 'admin';
-    const { order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, menu_item_id } = req.body;
+    const { order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, items } = req.body;
 
     if (!isAdmin) {
       const check = await pool.query('SELECT person_id, price, paid_amount as old_paid FROM food_orders WHERE id = $1', [id]);
@@ -292,11 +292,10 @@ router.put('/:id', async (req, res, next) => {
            transaction_date = $5,
            notes = $6,
            payment_method = $7,
-           menu_item_id = $8,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
+       WHERE id = $8
        RETURNING *`,
-      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes || null, payment_method || null, menu_item_id || null, id]
+      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes || null, payment_method || null, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
@@ -305,13 +304,36 @@ router.put('/:id', async (req, res, next) => {
     const personResult = await pool.query('SELECT name FROM persons WHERE id = $1', [order.person_id]);
     const personName = personResult.rows[0].name;
 
+    if (items !== undefined) {
+      await pool.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+      let totalPrice = 0;
+      for (const item of items) {
+        if (item.menu_item_id) {
+          await pool.query(
+            'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
+            [id, item.menu_item_id, item.quantity || 1, item.price]
+          );
+          totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+        }
+      }
+      if (items.length > 0) {
+        await pool.query('UPDATE food_orders SET price = $1 WHERE id = $2', [totalPrice, id]);
+      }
+    }
+
     broadcast('order_updated', {
       ...order,
       person_name: personName,
       triggeredBy: req.user.id,
     });
 
-    res.json({ ...order, person_name: personName });
+    const orderItems = items?.length ? await pool.query(
+      `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
+       FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
+       WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
+    ) : { rows: [] };
+
+    res.json({ ...order, person_name: personName, items: orderItems.rows });
   } catch (err) {
     next(err);
   }
