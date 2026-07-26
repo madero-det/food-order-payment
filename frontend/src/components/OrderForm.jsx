@@ -91,8 +91,8 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     onSubmit(data);
   };
 
-  const foodItems = menuItems.filter(m => m.type !== 'dessert');
-  const dessertItems = menuItems.filter(m => m.type === 'dessert');
+  const foodItems = menuItems.filter(m => m.type !== 'dessert' && !m.is_rice);
+  const dessertItems = menuItems.filter(m => m.type === 'dessert' && !m.is_rice);
     const riceItem = menuItems.find(m => m.is_rice);
   const hasRice = selectedItems.some(si => riceItem && si.menu_item_id === riceItem.id);
 
