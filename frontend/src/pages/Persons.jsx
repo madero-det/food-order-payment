@@ -186,13 +186,15 @@ export default function Persons({ user, onUserUpdate }) {
           <div className="persons-grid">
             {persons.map((p) => (
               <div className="person-card card" key={p.id}>
-                <PersonAvatar
-                  src={getImageUrl(p.profile_image)}
-                  name={p.name}
-                  personId={p.id}
-                  canEdit={isAdmin || p.id === user.id}
-                  onUploaded={handleAvatarUploaded}
-                />
+                <div className="person-card-avatar">
+                  <PersonAvatar
+                    src={getImageUrl(p.profile_image)}
+                    name={p.name}
+                    personId={p.id}
+                    canEdit={isAdmin || p.id === user.id}
+                    onUploaded={handleAvatarUploaded}
+                  />
+                </div>
                 <div className="person-card-info">
                   <div className="person-card-name" onClick={() => navigate(`/person-orders?person_id=${p.id}`)}>
                     {p.name}
