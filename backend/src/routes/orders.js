@@ -430,8 +430,8 @@ router.post('/:id/pay', async (req, res, next) => {
       if (check.rows[0].person_id !== req.user.id) return res.status(403).json({ error: 'Access denied' });
     }
 
-    const { paid_amount, transaction_date } = req.body;
-    if (!isValidDateTime(transaction_date)) {
+    const { paid_amount, transaction_date, payment_method } = req.body;
+    if (transaction_date && !isValidDateTime(transaction_date)) {
       return res.status(400).json({ error: 'Invalid transaction_date' });
     }
     
@@ -442,10 +442,11 @@ router.post('/:id/pay', async (req, res, next) => {
        SET paid_amount = COALESCE($1, price),
            transaction_date = COALESCE($2, CURRENT_TIMESTAMP),
            payment_status = $3,
+           payment_method = COALESCE($4, payment_method),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4
+       WHERE id = $5
        RETURNING *`,
-      [paid_amount || null, transaction_date || null, payment_status, id]
+      [paid_amount || null, transaction_date || null, payment_status, payment_method || null, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });

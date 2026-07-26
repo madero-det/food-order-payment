@@ -20,7 +20,7 @@ export default function DailyOrders() {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [payModal, setPayModal] = useState({ show: false, orderId: null, datetime: '', isCash: false });
+  const [payModal, setPayModal] = useState({ show: false, orderId: null, datetime: '', isCash: false, paymentMethod: '' });
   const [deleteModal, setDeleteModal] = useState({ show: false, orderId: null });
   const [approveDeletionModal, setApproveDeletionModal] = useState({ show: false, orderId: null });
   const [cancelDeletionModal, setCancelDeletionModal] = useState({ show: false, orderId: null });
@@ -171,20 +171,20 @@ export default function DailyOrders() {
 
   const openPayModal = (id) => {
     const order = orders.find(o => o.id === id);
-    const isCash = order?.payment_method === 'cash';
+    const pm = order?.payment_method || '';
     const now = new Date();
     const dt = now.getFullYear() + '-' +
       String(now.getMonth() + 1).padStart(2, '0') + '-' +
       String(now.getDate()).padStart(2, '0') + 'T' +
       String(now.getHours()).padStart(2, '0') + ':' +
       String(now.getMinutes()).padStart(2, '0');
-    setPayModal({ show: true, orderId: id, datetime: dt, isCash });
+    setPayModal({ show: true, orderId: id, datetime: dt, isCash: pm === 'cash', paymentMethod: pm });
   };
 
   const confirmPay = async () => {
     try {
-      const result = await api.payOrder(payModal.orderId, { transaction_date: payModal.datetime });
-      setPayModal({ show: false, orderId: null, datetime: '', isCash: false });
+      const result = await api.payOrder(payModal.orderId, { transaction_date: payModal.datetime, payment_method: payModal.paymentMethod || null });
+      setPayModal({ show: false, orderId: null, datetime: '', isCash: false, paymentMethod: '' });
       setOrders(prev => prev.map(o => o.id === result.id ? {
         ...o,
         paid_amount: result.paid_amount != null ? Number(result.paid_amount) : null,
@@ -358,6 +358,17 @@ export default function DailyOrders() {
           <div className="card" style={{ width: '90%', maxWidth: '400px', margin: 0 }}>
             <h2 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Confirm Payment</h2>
             <div className="form-group">
+              <label>Payment Method</label>
+              <select
+                value={payModal.paymentMethod}
+                onChange={(e) => setPayModal({ ...payModal, paymentMethod: e.target.value, isCash: e.target.value === 'cash' })}
+              >
+                <option value="">-</option>
+                <option value="cash">Cash</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
+            <div className="form-group">
               <label>Transaction Date & Time</label>
               <input
                 type="datetime-local"
@@ -372,7 +383,7 @@ export default function DailyOrders() {
               )}
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-              <button className="btn btn-ghost" onClick={() => setPayModal({ show: false, orderId: null, datetime: '', isCash: false })}>Cancel</button>
+              <button className="btn btn-ghost" onClick={() => setPayModal({ show: false, orderId: null, datetime: '', isCash: false, paymentMethod: '' })}>Cancel</button>
               <button className="btn btn-success" onClick={confirmPay}>Confirm Pay</button>
             </div>
           </div>
