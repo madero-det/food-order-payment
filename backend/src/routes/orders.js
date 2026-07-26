@@ -188,21 +188,21 @@ router.post('/', async (req, res, next) => {
     const personResult = await pool.query('SELECT name, profile_image FROM persons WHERE id = $1', [person_id]);
     const personName = personResult.rows[0].name;
     const personAvatar = personResult.rows[0].profile_image;
-    let menuItemName = null;
-    if (menu_item_id) {
-      const mi = await pool.query('SELECT name FROM menu_items WHERE id = $1', [menu_item_id]);
-      menuItemName = mi.rows[0]?.name || null;
-    }
 
     broadcast('order_created', {
       ...order,
       person_name: personName,
       person_avatar: personAvatar,
-      menu_item_name: menuItemName || null,
       triggeredBy: req.user.id,
     });
 
-    res.status(201).json({ ...order, person_name: personName, person_avatar: personAvatar });
+    const orderItems = items?.length ? await pool.query(
+      `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
+       FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
+       WHERE oi.order_id = $1 ORDER BY oi.id`, [order.id]
+    ) : { rows: [] };
+
+    res.status(201).json({ ...order, person_name: personName, person_avatar: personAvatar, items: orderItems.rows });
   } catch (err) {
     next(err);
   }
