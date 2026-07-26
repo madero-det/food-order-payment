@@ -1082,21 +1082,16 @@ body.dark,
 
 .person-card {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
   padding: 1rem;
 }
 
-.person-card-row {
+.person-card-info {
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.person-card-avatar-spacer {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .person-card-name {
