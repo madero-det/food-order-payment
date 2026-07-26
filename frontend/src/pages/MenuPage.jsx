@@ -26,10 +26,10 @@ export default function MenuPage() {
     setError('');
     if (!name.trim() || !price) return setError('Name and price are required');
     try {
-      if (editingId) {
-        await api.updateMenuItem(editingId, { name, price: Number(price) });
-      } else {
+      if (editingId === 'new') {
         await api.createMenuItem({ name, price: Number(price) });
+      } else {
+        await api.updateMenuItem(editingId, { name, price: Number(price) });
       }
       setName('');
       setPrice('');
