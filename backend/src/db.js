@@ -126,7 +126,21 @@ export const initDB = async () => {
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
         price INTEGER NOT NULL,
+        type VARCHAR(10) DEFAULT 'food',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      DO $$ BEGIN
+        ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS type VARCHAR(10) DEFAULT 'food';
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      CREATE TABLE IF NOT EXISTS order_items (
+        id SERIAL PRIMARY KEY,
+        order_id INTEGER NOT NULL REFERENCES food_orders(id) ON DELETE CASCADE,
+        menu_item_id INTEGER NOT NULL REFERENCES menu_items(id),
+        quantity INTEGER DEFAULT 1,
+        price INTEGER NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS notifications (

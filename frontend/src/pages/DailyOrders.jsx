@@ -74,7 +74,7 @@ export default function DailyOrders() {
           person_avatar: data.person_avatar || null,
           notes: data.notes || null,
           payment_method: data.payment_method || null,
-          menu_item_name: data.menu_item_name || null,
+          items: data.items || [],
         }]);
       }
     } else if (event === 'order_updated') {
@@ -90,7 +90,7 @@ export default function DailyOrders() {
           person_name: data.person_name ?? o.person_name,
           notes: data.notes !== undefined ? data.notes : o.notes,
           payment_method: data.payment_method !== undefined ? data.payment_method : o.payment_method,
-          menu_item_name: data.menu_item_name !== undefined ? data.menu_item_name : o.menu_item_name,
+          items: data.items !== undefined ? data.items : o.items,
         } : o));
       }
     } else if (event === 'order_deleted') {
@@ -138,7 +138,7 @@ export default function DailyOrders() {
           person_avatar: result.person_avatar || null,
           notes: result.notes || null,
           payment_method: result.payment_method || null,
-          menu_item_name: result.menu_item_name || null,
+          items: result.items || [],
         }]);
       }
     } catch (err) {
@@ -162,7 +162,7 @@ export default function DailyOrders() {
           person_name: result.person_name ?? o.person_name,
           notes: result.notes !== undefined ? result.notes : o.notes,
           payment_method: result.payment_method !== undefined ? result.payment_method : o.payment_method,
-          menu_item_name: result.menu_item_name !== undefined ? result.menu_item_name : o.menu_item_name,
+          items: result.items !== undefined ? result.items : o.items,
         } : o));
     } catch (err) {
       alert(err.message);

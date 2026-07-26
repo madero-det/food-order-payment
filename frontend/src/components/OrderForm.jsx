@@ -37,6 +37,10 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     return p ? p.name : '-';
   };
 
+  const initItems = initialData.items && initialData.items.length
+    ? initialData.items.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity || 1, price: i.price, id: Date.now() + Math.random() }))
+    : [];
+
   const [formData, setFormData] = useState({
     order_date: toDateInput(initialData.order_date) || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; })(),
     person_id: initialData.person_id ? String(initialData.person_id) : '',
@@ -45,23 +49,50 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     transaction_date: toDatetimeInput(initialData.transaction_date),
     notes: initialData.notes || '',
     payment_method: initialData.payment_method || '',
-    menu_item_id: initialData.menu_item_id ? String(initialData.menu_item_id) : '',
   });
+
+  const [selectedItems, setSelectedItems] = useState(initItems);
+  const [newItemId, setNewItemId] = useState('');
+
+  const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0);
+
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, price: totalPrice || prev.price }));
+  }, [totalPrice]);
+
+  const addItem = () => {
+    if (!newItemId) return;
+    const item = menuItems.find(m => m.id === Number(newItemId));
+    if (!item) return;
+    setSelectedItems(prev => [...prev, { menu_item_id: item.id, quantity: 1, price: item.price, id: Date.now() + Math.random() }]);
+    setNewItemId('');
+  };
+
+  const removeItem = (uid) => {
+    setSelectedItems(prev => prev.filter(i => i.id !== uid));
+  };
+
+  const updateQty = (uid, qty) => {
+    setSelectedItems(prev => prev.map(i => i.id === uid ? { ...i, quantity: Math.max(1, qty) } : i));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const data = {
       ...formData,
-      price: Number(formData.price),
+      price: totalPrice || Number(formData.price),
       paid_amount: formData.paid_amount !== '' ? Number(formData.paid_amount) : null,
       person_id: Number(formData.person_id),
       transaction_date: formData.transaction_date || null,
       notes: formData.notes || null,
       payment_method: formData.payment_method || null,
-      menu_item_id: formData.menu_item_id ? Number(formData.menu_item_id) : null,
+      items: selectedItems.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity, price: i.price })),
     };
     onSubmit(data);
   };
+
+  const foodItems = menuItems.filter(m => m.type !== 'dessert');
+  const dessertItems = menuItems.filter(m => m.type === 'dessert');
 
   return (
     <form onSubmit={handleSubmit}>
@@ -92,35 +123,6 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
-          </div>
-          <div className="form-group">
-            <label>Food Item</label>
-            <select
-              value={formData.menu_item_id}
-              onChange={(e) => {
-                const mid = e.target.value;
-                const item = mid ? menuItems.find(m => m.id === Number(mid)) : null;
-                setFormData({ ...formData, menu_item_id: mid, price: item ? String(item.price) : formData.price });
-              }}
-            >
-              <option value="">- Manual price -</option>
-              {menuItems.map((m) => (
-                <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Price (Riel)</label>
-            <input
-              type="number"
-              min="0"
-              step="100"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value, menu_item_id: '' })}
-              readOnly={!!formData.menu_item_id}
-              style={!!formData.menu_item_id ? { background: '#f3f4f6', cursor: 'not-allowed' } : undefined}
-              required
-            />
           </div>
           <div className="form-group">
             <label>Paid Amount (Riel)</label>
@@ -155,44 +157,6 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
             />
           </div>
           <div className="form-group">
-            <label>Food Item</label>
-            <select
-              value={formData.menu_item_id}
-              onChange={(e) => {
-                const mid = e.target.value;
-                const item = mid ? menuItems.find(m => m.id === Number(mid)) : null;
-                setFormData({ ...formData, menu_item_id: mid, price: item ? String(item.price) : formData.price });
-              }}
-            >
-              <option value="">- Manual price -</option>
-              {menuItems.map((m) => (
-                <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Price (Riel)</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={formatRiel(formData.price)}
-                readOnly
-                style={{ background: '#f3f4f6', cursor: 'not-allowed' }}
-              />
-            ) : (
-              <input
-                type="number"
-                min="0"
-                step="100"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value, menu_item_id: '' })}
-                readOnly={!!formData.menu_item_id}
-                style={!!formData.menu_item_id ? { background: '#f3f4f6', cursor: 'not-allowed' } : undefined}
-                required
-              />
-            )}
-          </div>
-          <div className="form-group">
             <label>Paid Amount (Riel)</label>
             <input
               type="number"
@@ -205,6 +169,53 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           </div>
         </div>
       )}
+
+      <div style={{ marginTop: '0.75rem' }}>
+        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#6b7280', marginBottom: '0.25rem' }}>
+          Food Items
+        </label>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <select value={newItemId} onChange={(e) => setNewItemId(e.target.value)} style={{ flex: 1 }}>
+            <option value="">- Add item -</option>
+            {foodItems.length > 0 && <optgroup label="Food" />}
+            {foodItems.map(m => (
+              <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+            ))}
+            {dessertItems.length > 0 && <optgroup label="Dessert" />}
+            {dessertItems.map(m => (
+              <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+            ))}
+          </select>
+          <button type="button" className="btn btn-primary btn-sm" onClick={addItem}>+</button>
+        </div>
+
+        {selectedItems.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.5rem' }}>
+            {selectedItems.map((si) => {
+              const mi = menuItems.find(m => m.id === Number(si.menu_item_id));
+              return (
+                <div key={si.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f3f4f6', padding: '0.35rem 0.6rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+                  <span style={{ flex: 1 }}>{mi?.name || 'Item'} {mi?.type === 'dessert' ? '(Dessert)' : ''}</span>
+                  <span style={{ color: '#6b7280' }}>
+                    <select value={si.quantity} onChange={(e) => updateQty(si.id, Number(e.target.value))} style={{ padding: '0.1rem 0.3rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.8rem' }}>
+                      {[1,2,3,4,5].map(q => <option key={q} value={q}>{q}</option>)}
+                    </select>
+                    × {Number(si.price).toLocaleString()} R = <strong>{(Number(si.price) * si.quantity).toLocaleString()} R</strong>
+                  </span>
+                  <button type="button" onClick={() => removeItem(si.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }}>×</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {selectedItems.length > 0 && (
+          <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.75rem', color: '#1a1a2e' }}>
+            Total: {totalPrice.toLocaleString()} R
+          </div>
+        )}
+      </div>
+
       <div className="form-row" style={{ marginTop: '0.5rem' }}>
         <div className="form-group">
           <label>Notes</label>
@@ -212,7 +223,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
             type="text"
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="e.g., no chili, menu item"
+            placeholder="e.g., no chili"
           />
         </div>
         <div className="form-group">

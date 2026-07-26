@@ -7,6 +7,7 @@ export default function MenuPage() {
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [type, setType] = useState('food');
   const [error, setError] = useState('');
   const [deleteModal, setDeleteModal] = useState({ show: false, id: null });
 
@@ -27,9 +28,9 @@ export default function MenuPage() {
     if (!name.trim() || !price) return setError('Name and price are required');
     try {
       if (editingId === 'new') {
-        await api.createMenuItem({ name, price: Number(price) });
+        await api.createMenuItem({ name, price: Number(price), type });
       } else {
-        await api.updateMenuItem(editingId, { name, price: Number(price) });
+        await api.updateMenuItem(editingId, { name, price: Number(price), type });
       }
       setName('');
       setPrice('');
@@ -44,6 +45,7 @@ export default function MenuPage() {
     setEditingId(item.id);
     setName(item.name);
     setPrice(String(item.price));
+    setType(item.type || 'food');
     setError('');
   };
 
@@ -61,6 +63,7 @@ export default function MenuPage() {
     setEditingId(null);
     setName('');
     setPrice('');
+    setType('food');
     setError('');
   };
 
@@ -88,6 +91,13 @@ export default function MenuPage() {
                 <label>Price (Riel)</label>
                 <input type="number" min="0" step="100" value={price} onChange={(e) => setPrice(e.target.value)} required />
               </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Type</label>
+                <select value={type} onChange={(e) => setType(e.target.value)}>
+                  <option value="food">Food</option>
+                  <option value="dessert">Dessert</option>
+                </select>
+              </div>
             </div>
             <div className="form-actions">
               <button type="button" className="btn btn-ghost" onClick={handleCancel}>Cancel</button>
@@ -108,6 +118,7 @@ export default function MenuPage() {
               <tr>
                 <th>#</th>
                 <th>Name</th>
+                <th>Type</th>
                 <th>Price</th>
                 <th className="text-right">Actions</th>
               </tr>
@@ -117,6 +128,7 @@ export default function MenuPage() {
                 <tr key={item.id}>
                   <td>{idx + 1}</td>
                   <td><strong>{item.name}</strong></td>
+                  <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
                   <td>{Number(item.price).toLocaleString()} R</td>
                   <td>
                     <div className="table-actions">

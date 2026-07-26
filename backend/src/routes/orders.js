@@ -70,12 +70,18 @@ router.get('/', async (req, res, next) => {
 
     const dataQuery = `
       SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.transaction_date, fo.payment_status, fo.deletion_status,
-             fo.notes, fo.payment_method, fo.menu_item_id, mi.name as menu_item_name,
-             p.id as person_id, p.name as person_name, p.profile_image as person_avatar
+             fo.notes, fo.payment_method,
+             p.id as person_id, p.name as person_name, p.profile_image as person_avatar,
+             COALESCE(json_agg(json_build_object(
+               'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
+               'name', mi.name, 'type', mi.type
+             ) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) as items
       FROM food_orders fo
       JOIN persons p ON fo.person_id = p.id
-      LEFT JOIN menu_items mi ON fo.menu_item_id = mi.id
+      LEFT JOIN order_items oi ON fo.id = oi.order_id
+      LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id
       ${whereClause}
+      GROUP BY fo.id, p.id, p.name, p.profile_image
       ORDER BY fo.order_date DESC, fo.id ASC
       LIMIT $${paramIndex++} OFFSET $${paramIndex++}
     `;
@@ -114,10 +120,18 @@ router.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     const result = await pool.query(
       `SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.transaction_date, fo.payment_status, fo.deletion_status,
-              p.id as person_id, p.name as person_name, p.profile_image as person_avatar
+              fo.notes, fo.payment_method,
+              p.id as person_id, p.name as person_name, p.profile_image as person_avatar,
+              COALESCE(json_agg(json_build_object(
+                'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
+                'name', mi.name, 'type', mi.type
+              ) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) as items
        FROM food_orders fo
        JOIN persons p ON fo.person_id = p.id
-       WHERE fo.id = $1`,
+       LEFT JOIN order_items oi ON fo.id = oi.order_id
+       LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id
+       WHERE fo.id = $1
+       GROUP BY fo.id, p.id, p.name, p.profile_image`,
       [id]
     );
     if (result.rows.length === 0) {
@@ -131,11 +145,23 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { order_date, price, paid_amount, transaction_date, notes, payment_method, menu_item_id } = req.body;
+    const { order_date, paid_amount, transaction_date, notes, payment_method, items } = req.body;
     const isAdmin = req.user.role === 'admin';
     const person_id = isAdmin ? req.body.person_id : req.user.id;
-    if (!order_date || !person_id || !price) {
-      return res.status(400).json({ error: 'order_date, person_id, and price are required' });
+    if (!order_date || !person_id) {
+      return res.status(400).json({ error: 'order_date and person_id are required' });
+    }
+
+    let totalPrice = 0;
+    if (items && items.length) {
+      for (const item of items) {
+        if (!item.menu_item_id) return res.status(400).json({ error: 'Each item needs a menu_item_id' });
+        totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      }
+    } else {
+      const price = req.body.price;
+      if (!price) return res.status(400).json({ error: 'price or items are required' });
+      totalPrice = Number(price);
     }
     if (!isValidDate(order_date)) {
       return res.status(400).json({ error: 'Invalid order_date' });
@@ -147,9 +173,18 @@ router.post('/', async (req, res, next) => {
       `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, menu_item_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes || null, payment_method || null, menu_item_id || null]
+      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, null]
     );
     const order = result.rows[0];
+
+    if (items && items.length) {
+      for (const item of items) {
+        await pool.query(
+          'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
+          [order.id, item.menu_item_id, item.quantity || 1, item.price]
+        );
+      }
+    }
     const personResult = await pool.query('SELECT name, profile_image FROM persons WHERE id = $1', [person_id]);
     const personName = personResult.rows[0].name;
     const personAvatar = personResult.rows[0].profile_image;
