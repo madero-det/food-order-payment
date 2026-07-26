@@ -97,6 +97,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
         <tr>
           <th>#</th>
           <th>Name</th>
+          <th>Items</th>
           <th>Price</th>
           <th className="hide-mobile">Paid</th>
           <th className="hide-mobile">Transaction Date</th>
@@ -119,14 +120,12 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
                 )}
                 <div>
                   <strong>{order.person_name}</strong>
-                  {order.items && order.items.length > 0 && (
-                    <div style={{ fontSize: '0.72rem', color: '#2563eb', marginTop: 1 }}>
-                      {order.items.map(i => i.name).join(', ')}
-                    </div>
-                  )}
                   {order.notes && <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: 1 }}>{order.notes}</div>}
                 </div>
               </div>
+            </td>
+            <td style={{ fontSize: '0.85rem', color: '#2563eb' }}>
+              {order.items && order.items.length > 0 ? order.items.map(i => i.name).join(', ') : '-'}
             </td>
             <td>
               <div>{formatRiel(order.price)}</div>
