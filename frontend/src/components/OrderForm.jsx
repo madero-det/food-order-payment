@@ -175,7 +175,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           Food Items
         </label>
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <select value={newItemId} onChange={(e) => setNewItemId(e.target.value)} style={{ flex: 1 }}>
+          <select value={newItemId} onChange={(e) => setNewItemId(e.target.value)} style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', outline: 'none' }}>
             <option value="">- Add item -</option>
             {foodItems.length > 0 && <optgroup label="Food" />}
             {foodItems.map(m => (
