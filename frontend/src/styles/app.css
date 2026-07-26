@@ -258,6 +258,13 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   gap: 0.75rem;
 }
 
+.order-form-area {
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
 .badge {
   display: inline-block;
   padding: 0.2rem 0.6rem;
@@ -1062,4 +1069,8 @@ body.dark,
 
 .dark .daily-summary span {
   color: #e5e7eb;
+}
+
+.dark .order-form-area {
+  background: #1f2937;
 }

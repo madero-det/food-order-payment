@@ -315,7 +315,7 @@ export default function DailyOrders() {
         </div>
 
         {showForm && (
-          <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: '8px', marginBottom: '1rem' }}>
+          <div className="order-form-area">
             <OrderForm
               persons={persons}
               onSubmit={editingOrder ? handleUpdate : handleCreate}
