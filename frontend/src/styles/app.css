@@ -247,6 +247,18 @@ input[type="date"] {
   min-height: 38px;
 }
 
+.dark input[type="datetime-local"],
+.dark input[type="date"] {
+  color: #e5e7eb !important;
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   opacity: 0.6;
   cursor: pointer;
