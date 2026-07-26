@@ -67,6 +67,7 @@ export default function Persons({ user, onUserUpdate }) {
   const [confirmPwd, setConfirmPwd] = useState('');
   const [pwdError, setPwdError] = useState('');
   const [pwdSuccess, setPwdSuccess] = useState('');
+  const [previewSrc, setPreviewSrc] = useState(null);
   const [pwdLoading, setPwdLoading] = useState(false);
 
   const fetchPersons = async () => {
@@ -185,13 +186,15 @@ export default function Persons({ user, onUserUpdate }) {
           <div className="persons-grid">
             {persons.map((p) => (
               <div className="person-card card" key={p.id}>
-                <PersonAvatar
-                  src={getImageUrl(p.profile_image)}
-                  name={p.name}
-                  personId={p.id}
-                  canEdit={isAdmin || p.id === user.id}
-                  onUploaded={handleAvatarUploaded}
-                />
+                <div onClick={(e) => { e.stopPropagation(); if (p.profile_image) setPreviewSrc(getImageUrl(p.profile_image)); }} style={{ cursor: p.profile_image ? 'pointer' : 'default' }}>
+                  <PersonAvatar
+                    src={getImageUrl(p.profile_image)}
+                    name={p.name}
+                    personId={p.id}
+                    canEdit={isAdmin || p.id === user.id}
+                    onUploaded={handleAvatarUploaded}
+                  />
+                </div>
                 <div className="person-card-info">
                   <span className="person-card-name" onClick={() => navigate(`/person-orders?person_id=${p.id}`)}>
                     {p.name}
@@ -296,6 +299,17 @@ export default function Persons({ user, onUserUpdate }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {previewSrc && (
+        <div className="modal-overlay" onClick={() => setPreviewSrc(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', padding: '0.5rem' }}>
+            <img src={previewSrc} alt="Preview" style={{ width: '100%', borderRadius: '8px' }} />
+            <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setPreviewSrc(null)}>Close</button>
+            </div>
           </div>
         </div>
       )}
