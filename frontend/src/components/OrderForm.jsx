@@ -187,7 +187,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
         </label>
         {riceItem && (
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-            <input type="checkbox" checked={hasRice} onChange={toggleRice} style={{ width: 16, height: 16 }} />
+            <input type="checkbox" checked={hasRice} onChange={toggleRice} style={{ width: 16, height: 16, outline: 'none' }} />
             {riceItem.name} ({Number(riceItem.price).toLocaleString()} R)
           </label>
         )}

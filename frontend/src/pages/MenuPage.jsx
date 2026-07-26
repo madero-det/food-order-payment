@@ -101,7 +101,7 @@ export default function MenuPage() {
                   <option value="dessert">Dessert</option>
                 </select>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-                  <input type="checkbox" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 14, height: 14 }} />
+                  <input type="checkbox" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
                   Rice
                 </label>
               </div>
