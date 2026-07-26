@@ -17,21 +17,17 @@ self.addEventListener('message', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-
-  const urlToOpen = '/';
+  const origin = self.location.origin;
 
   e.waitUntil(
     (async () => {
-      const clientList = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-      for (const client of clientList) {
-        if (client.url.includes(self.registration.scope) && 'focus' in client) {
-          try {
-            await client.navigate(urlToOpen);
-          } catch {}
+      const allClients = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of allClients) {
+        if (client.url.startsWith(origin)) {
           return client.focus();
         }
       }
-      return clients.openWindow(urlToOpen);
+      return clients.openWindow(origin + '/');
     })()
   );
 });

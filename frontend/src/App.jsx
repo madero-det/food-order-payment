@@ -72,11 +72,16 @@ function AppContent() {
   const notify = (title, body, tag) => {
     if (localStorage.getItem('notificationsEnabled') === 'false') return;
     if (Notification.permission !== 'granted') return;
-    if (navigator.serviceWorker?.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SHOW_NOTIFICATION', title, body, tag });
-    } else {
-      new Notification(title, { body, icon: '/app_icon.png', tag });
-    }
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.showNotification(title, {
+        body,
+        icon: '/app_icon.png',
+        badge: '/app_icon.png',
+        tag: tag || 'food-order-notification',
+        renotify: true,
+        vibrate: [200, 100, 200],
+      });
+    }).catch(() => {});
   };
 
   const refreshUnread = () => {
