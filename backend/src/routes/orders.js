@@ -292,7 +292,7 @@ router.put('/:id', async (req, res, next) => {
            paid_amount = $4,
            transaction_date = $5,
            notes = COALESCE($6, notes),
-           payment_method = COALESCE($7, payment_method),
+           payment_method = $7,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $8
        RETURNING *`,
