@@ -104,6 +104,7 @@ export default function DailyOrders() {
           paid_amount: data.paid_amount != null ? Number(data.paid_amount) : null,
           transaction_date: data.transaction_date,
           payment_status: data.payment_status,
+          payment_method: data.payment_method !== undefined ? data.payment_method : o.payment_method,
         } : o));
       }
     } else if (event === 'deletion_requested' || event === 'deletion_cancelled') {
