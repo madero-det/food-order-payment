@@ -190,6 +190,7 @@ export default function DailyOrders() {
         paid_amount: result.paid_amount != null ? Number(result.paid_amount) : null,
         transaction_date: result.transaction_date,
         payment_status: result.payment_status,
+        payment_method: result.payment_method !== undefined ? result.payment_method : o.payment_method,
       } : o));
     } catch (err) {
       alert(err.message);
