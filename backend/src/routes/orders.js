@@ -274,7 +274,13 @@ router.put('/:id', async (req, res, next) => {
         });
       }
 
-      return res.json({ ...order, person_name: personResult.rows[0].name });
+      const orderItems = await pool.query(
+        `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
+         FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
+         WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
+      );
+
+      return res.json({ ...order, person_name: personResult.rows[0].name, items: orderItems.rows });
     }
 
     if (!isValidDate(order_date)) {
