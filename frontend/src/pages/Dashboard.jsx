@@ -82,6 +82,16 @@ export default function Dashboard() {
     return { name: `${day} ${MONTHS_SHORT[m]}`, total: d.total, paid: d.paid };
   }) || [];
 
+  const dailyMaxTotal = dailyChartData.length ? Math.max(...dailyChartData.map(d => d.total)) : 0;
+  const monthlyMaxTotal = monthlyData.length ? Math.max(...monthlyData.map(d => d.total)) : 0;
+
+  const maxDot = (color, maxValue) => (props) => {
+    const { cx, cy, payload } = props;
+    if (!cx || !cy) return null;
+    const isMax = payload.total === maxValue && maxValue > 0;
+    return <circle cx={cx} cy={cy} r={isMax ? 5 : 3} fill={isMax ? '#dc2626' : color} />;
+  };
+
   if (loading) return <div className="empty-state">Loading...</div>;
 
   return (
@@ -256,7 +266,7 @@ export default function Dashboard() {
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={formatK} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={maxDot('#2563eb', dailyMaxTotal)} />
                     <Line type="monotone" dataKey="paid" name="Paid" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -276,7 +286,7 @@ export default function Dashboard() {
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={formatK} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={maxDot('#2563eb', monthlyMaxTotal)} />
                   <Line type="monotone" dataKey="paid" name="Paid" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
