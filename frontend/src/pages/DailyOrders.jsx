@@ -325,6 +325,7 @@ export default function DailyOrders() {
         {showForm && (
           <div className="order-form-area">
             <OrderForm
+              key={editingOrder?.id || 'new'}
               persons={persons}
               menuItems={menuItems}
               onSubmit={editingOrder ? handleUpdate : handleCreate}
