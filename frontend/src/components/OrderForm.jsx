@@ -248,6 +248,8 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           <select
             value={formData.payment_method}
             onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+            disabled={!isAdmin && isEditing}
+            className={(!isAdmin && isEditing) ? 'input-disabled' : ''}
           >
             <option value="">-</option>
             <option value="cash">Cash</option>
