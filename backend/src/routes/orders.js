@@ -189,18 +189,19 @@ router.post('/', async (req, res, next) => {
     const personName = personResult.rows[0].name;
     const personAvatar = personResult.rows[0].profile_image;
 
-    broadcast('order_created', {
-      ...order,
-      person_name: personName,
-      person_avatar: personAvatar,
-      triggeredBy: req.user.id,
-    });
-
     const orderItems = items?.length ? await pool.query(
       `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
        FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
        WHERE oi.order_id = $1 ORDER BY oi.id`, [order.id]
     ) : { rows: [] };
+
+    broadcast('order_created', {
+      ...order,
+      person_name: personName,
+      person_avatar: personAvatar,
+      items: orderItems.rows,
+      triggeredBy: req.user.id,
+    });
 
     res.status(201).json({ ...order, person_name: personName, person_avatar: personAvatar, items: orderItems.rows });
   } catch (err) {
@@ -321,17 +322,18 @@ router.put('/:id', async (req, res, next) => {
       }
     }
 
-    broadcast('order_updated', {
-      ...order,
-      person_name: personName,
-      triggeredBy: req.user.id,
-    });
-
     const orderItems = items?.length ? await pool.query(
       `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
        FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
        WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
     ) : { rows: [] };
+
+    broadcast('order_updated', {
+      ...order,
+      person_name: personName,
+      items: orderItems.rows,
+      triggeredBy: req.user.id,
+    });
 
     res.json({ ...order, person_name: personName, items: orderItems.rows });
   } catch (err) {
