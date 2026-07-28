@@ -18,33 +18,41 @@ router.get('/', async (req, res, next) => {
     const lastDay = new Date(y, m, 0).getDate();
     const endDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
     const isAdmin = req.user.role === 'admin';
-    const personFilter = isAdmin ? '' : ` AND fo.person_id = ${req.user.id}`;
-    const personFilterP = isAdmin ? '' : ` AND p.id = ${req.user.id}`;
+    const personFilterFo = isAdmin ? '' : ' AND fo.person_id = $3';
+    const personFilterP = isAdmin ? '' : ' AND p.id = $3';
+    const dateParams = isAdmin ? [startDate, endDate] : [startDate, endDate, req.user.id];
 
     const todayStr = todayKHM();
+    const todayQuery = `SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.payment_status,
+               p.name as person_name, p.profile_image as person_avatar
+        FROM food_orders fo
+        JOIN persons p ON fo.person_id = p.id
+        WHERE fo.order_date = $1
+        ORDER BY fo.order_date DESC, fo.id ASC`;
+    const todayParams = [todayStr];
 
     const [totalResult, paidResult, unpaidResult, dailyResult, personResult, todayResult] = await Promise.all([
       pool.query(
         `SELECT COUNT(*) as total_orders, COALESCE(SUM(price), 0) as total_price
-         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2${personFilter}`,
-        [startDate, endDate]
+         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2${personFilterFo}`,
+        dateParams
       ),
       pool.query(
         `SELECT COUNT(*) as paid_orders, COALESCE(SUM(paid_amount), 0) as total_paid
-         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2 AND fo.paid_amount IS NOT NULL${personFilter}`,
-        [startDate, endDate]
+         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2 AND fo.paid_amount IS NOT NULL${personFilterFo}`,
+        dateParams
       ),
       pool.query(
         `SELECT COUNT(*) as unpaid_orders, COALESCE(SUM(price), 0) as total_unpaid
-         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2 AND fo.paid_amount IS NULL${personFilter}`,
-        [startDate, endDate]
+         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2 AND fo.paid_amount IS NULL${personFilterFo}`,
+        dateParams
       ),
       pool.query(
         `SELECT fo.order_date, COUNT(*) as order_count, SUM(fo.price) as daily_total,
                 SUM(COALESCE(fo.paid_amount, 0)) as daily_paid
-         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2${personFilter}
+         FROM food_orders fo WHERE fo.order_date BETWEEN $1 AND $2${personFilterFo}
          GROUP BY fo.order_date ORDER BY fo.order_date`,
-        [startDate, endDate]
+        dateParams
       ),
       pool.query(
         `SELECT p.id as person_id, p.name, p.profile_image as person_avatar,
@@ -58,17 +66,9 @@ router.get('/', async (req, res, next) => {
          GROUP BY p.id, p.name
          HAVING COUNT(fo.id) > 0
          ORDER BY total_spent DESC`,
-        [startDate, endDate]
+        dateParams
       ),
-      pool.query(
-        `SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.payment_status,
-                p.name as person_name, p.profile_image as person_avatar
-         FROM food_orders fo
-         JOIN persons p ON fo.person_id = p.id
-         WHERE fo.order_date = $1
-         ORDER BY fo.order_date DESC, fo.id ASC`,
-        [todayStr]
-      ),
+      pool.query(todayQuery, todayParams),
     ]);
 
     res.json({
@@ -120,14 +120,15 @@ router.get('/unpaid', async (req, res, next) => {
     const lastDay = new Date(y, m, 0).getDate();
     const endDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
     const isAdmin = req.user.role === 'admin';
-    const personFilter = isAdmin ? '' : ` AND fo.person_id = ${req.user.id}`;
+    const personFilter = isAdmin ? '' : ' AND fo.person_id = $3';
+    const params = isAdmin ? [startDate, endDate] : [startDate, endDate, req.user.id];
     const result = await pool.query(
       `SELECT fo.id, fo.order_date, fo.price, p.name as person_name
        FROM food_orders fo
        JOIN persons p ON fo.person_id = p.id
        WHERE fo.paid_amount IS NULL AND fo.order_date BETWEEN $1 AND $2${personFilter}
        ORDER BY fo.order_date DESC`,
-      [startDate, endDate]
+      params
     );
     res.json(result.rows);
   } catch (err) {
@@ -142,7 +143,8 @@ router.get('/monthly', async (req, res, next) => {
     const startDate = `${y}-01-01`;
     const endDate = `${y}-12-31`;
     const isAdmin = req.user.role === 'admin';
-    const personFilter = isAdmin ? '' : ` AND fo.person_id = ${req.user.id}`;
+    const personFilter = isAdmin ? '' : ' AND fo.person_id = $3';
+    const params = isAdmin ? [startDate, endDate] : [startDate, endDate, req.user.id];
 
     const result = await pool.query(
       `SELECT EXTRACT(MONTH FROM fo.order_date)::int as month,
@@ -152,7 +154,7 @@ router.get('/monthly', async (req, res, next) => {
        WHERE fo.order_date BETWEEN $1 AND $2${personFilter}
        GROUP BY EXTRACT(MONTH FROM fo.order_date)
        ORDER BY month`,
-      [startDate, endDate]
+      params
     );
 
     const monthly = Array.from({ length: 12 }, (_, i) => {
@@ -180,7 +182,8 @@ router.get('/export', async (req, res, next) => {
     const lastDay = new Date(y, m, 0).getDate();
     const endDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
     const isAdmin = req.user.role === 'admin';
-    const personFilter = isAdmin ? '' : ` AND fo.person_id = ${req.user.id}`;
+    const personFilter = isAdmin ? '' : ' AND fo.person_id = $3';
+    const params = isAdmin ? [startDate, endDate] : [startDate, endDate, req.user.id];
 
     const result = await pool.query(
       `SELECT fo.order_date, p.name as person_name, fo.price, fo.paid_amount, fo.transaction_date,
@@ -189,7 +192,7 @@ router.get('/export', async (req, res, next) => {
        JOIN persons p ON fo.person_id = p.id
        WHERE fo.order_date BETWEEN $1 AND $2${personFilter}
        ORDER BY fo.order_date, p.name`,
-      [startDate, endDate]
+      params
     );
 
     const data = result.rows.map(r => ({

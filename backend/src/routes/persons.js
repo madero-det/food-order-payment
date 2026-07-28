@@ -1,7 +1,14 @@
 import { Router } from 'express';
 import multer from 'multer';
 import cloudinary from 'cloudinary';
+import { existsSync, unlinkSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 import pool from '../db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const uploadsDir = join(__dirname, '..', '..', 'uploads');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -113,8 +120,11 @@ router.delete('/:id', async (req, res, next) => {
       return res.status(404).json({ error: 'Person not found' });
     }
     if (existing.rows[0]?.profile_image) {
-      const filePath = join(uploadsDir, existing.rows[0].profile_image);
-      if (existsSync(filePath)) unlinkSync(filePath);
+      const imgPath = existing.rows[0].profile_image;
+      if (!imgPath.startsWith('http')) {
+        const filePath = join(uploadsDir, imgPath);
+        if (existsSync(filePath)) unlinkSync(filePath);
+      }
     }
     res.json({ message: 'Person deleted', id: result.rows[0].id });
   } catch (err) {

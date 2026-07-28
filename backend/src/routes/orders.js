@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import { requireAdmin } from '../middleware/auth.js';
 import { sendPaymentNotification, sendDeletionNotification, editMessageText } from '../telegram.js';
 import { broadcast } from '../events.js';
 import { saveAdminPaymentNotification } from '../notifications.js';
@@ -27,6 +28,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { date, start_date, end_date, person_id, paid, page, limit } = req.query;
     const isAdmin = req.user.role === 'admin';
+    const todayStr = khmDate();
     const pgNum = Math.max(1, parseInt(page) || 1);
     const pgSize = Math.min(100, Math.max(1, parseInt(limit) || 20));
     const offset = (pgNum - 1) * pgSize;
@@ -35,7 +37,9 @@ router.get('/', async (req, res, next) => {
     const params = [];
     let paramIndex = 1;
 
-    if (!isAdmin) {
+    const isTodayQuery = date && date === todayStr;
+
+    if (!isAdmin && !isTodayQuery) {
       whereClause += ` AND fo.person_id = $${paramIndex++}`;
       params.push(req.user.id);
     }
@@ -118,6 +122,18 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    const isAdmin = req.user.role === 'admin';
+    const todayStr = khmDate();
+
+    const check = await pool.query('SELECT person_id, order_date FROM food_orders WHERE id = $1', [id]);
+    if (check.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    const isTodayOrder = String(check.rows[0].order_date).substring(0, 10) === todayStr;
+    if (!isAdmin && !isTodayOrder && check.rows[0].person_id !== req.user.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const result = await pool.query(
       `SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.transaction_date, fo.payment_status, fo.deletion_status,
               fo.notes, fo.payment_method,
@@ -134,9 +150,6 @@ router.get('/:id', async (req, res, next) => {
        GROUP BY fo.id, p.id, p.name, p.profile_image`,
       [id]
     );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
     res.json(result.rows[0]);
   } catch (err) {
     next(err);
@@ -144,32 +157,45 @@ router.get('/:id', async (req, res, next) => {
 });
 
 router.post('/', async (req, res, next) => {
+  const client = await pool.connect();
   try {
     const { order_date, paid_amount, transaction_date, notes, payment_method, items } = req.body;
     const isAdmin = req.user.role === 'admin';
     const person_id = isAdmin ? req.body.person_id : req.user.id;
     if (!order_date || !person_id) {
+      client.release();
       return res.status(400).json({ error: 'order_date and person_id are required' });
     }
 
     let totalPrice = 0;
     if (items && items.length) {
       for (const item of items) {
-        if (!item.menu_item_id) return res.status(400).json({ error: 'Each item needs a menu_item_id' });
+        if (!item.menu_item_id) {
+          client.release();
+          return res.status(400).json({ error: 'Each item needs a menu_item_id' });
+        }
         totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
       }
     } else {
       const price = req.body.price;
-      if (!price) return res.status(400).json({ error: 'price or items are required' });
+      if (!price) {
+        client.release();
+        return res.status(400).json({ error: 'price or items are required' });
+      }
       totalPrice = Number(price);
     }
     if (!isValidDate(order_date)) {
+      client.release();
       return res.status(400).json({ error: 'Invalid order_date' });
     }
     if (!isValidDateTime(transaction_date)) {
+      client.release();
       return res.status(400).json({ error: 'Invalid transaction_date' });
     }
-    const result = await pool.query(
+
+    await client.query('BEGIN');
+
+    const result = await client.query(
       `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, menu_item_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
@@ -179,12 +205,16 @@ router.post('/', async (req, res, next) => {
 
     if (items && items.length) {
       for (const item of items) {
-        await pool.query(
+        await client.query(
           'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
           [order.id, item.menu_item_id, item.quantity || 1, item.price]
         );
       }
     }
+
+    await client.query('COMMIT');
+    client.release();
+
     const personResult = await pool.query('SELECT name, profile_image FROM persons WHERE id = $1', [person_id]);
     const personName = personResult.rows[0].name;
     const personAvatar = personResult.rows[0].profile_image;
@@ -205,6 +235,8 @@ router.post('/', async (req, res, next) => {
 
     res.status(201).json({ ...order, person_name: personName, person_avatar: personAvatar, items: orderItems.rows });
   } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    client.release();
     next(err);
   }
 });
@@ -312,19 +344,29 @@ router.put('/:id', async (req, res, next) => {
     const personName = personResult.rows[0].name;
 
     if (items !== undefined) {
-      await pool.query('DELETE FROM order_items WHERE order_id = $1', [id]);
-      let totalPrice = 0;
-      for (const item of items) {
-        if (item.menu_item_id) {
-          await pool.query(
-            'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
-            [id, item.menu_item_id, item.quantity || 1, item.price]
-          );
-          totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query('DELETE FROM order_items WHERE order_id = $1', [id]);
+        let totalPrice = 0;
+        for (const item of items) {
+          if (item.menu_item_id) {
+            await client.query(
+              'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
+              [id, item.menu_item_id, item.quantity || 1, item.price]
+            );
+            totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+          }
         }
-      }
-      if (items.length > 0) {
-        await pool.query('UPDATE food_orders SET price = $1 WHERE id = $2', [totalPrice, id]);
+        if (items.length > 0) {
+          await client.query('UPDATE food_orders SET price = $1 WHERE id = $2', [totalPrice, id]);
+        }
+        await client.query('COMMIT');
+      } catch (err) {
+        try { await client.query('ROLLBACK'); } catch (_) {}
+        throw err;
+      } finally {
+        client.release();
       }
     }
 
@@ -496,7 +538,7 @@ router.post('/:id/pay', async (req, res, next) => {
   }
 });
 
-router.post('/:id/approve', async (req, res, next) => {
+router.post('/:id/approve', requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -537,7 +579,7 @@ router.post('/:id/approve', async (req, res, next) => {
   }
 });
 
-router.post('/:id/reject', async (req, res, next) => {
+router.post('/:id/reject', requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await pool.query(
@@ -576,7 +618,7 @@ router.post('/:id/reject', async (req, res, next) => {
   }
 });
 
-router.post('/:id/approve-deletion', async (req, res, next) => {
+router.post('/:id/approve-deletion', requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM food_orders WHERE id = $1 RETURNING *', [id]);
@@ -614,7 +656,7 @@ router.post('/:id/approve-deletion', async (req, res, next) => {
   }
 });
 
-router.post('/:id/cancel-deletion', async (req, res, next) => {
+router.post('/:id/cancel-deletion', requireAdmin, async (req, res, next) => {
   try {
     const { id } = req.params;
     const result = await pool.query(

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../db.js';
+import { authenticate, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -47,7 +48,7 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
-router.post('/register', async (req, res, next) => {
+router.post('/register', authenticate, requireAdmin, async (req, res, next) => {
   try {
     const { name, password, role } = req.body;
     if (!name || !password) {
