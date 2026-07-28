@@ -1164,6 +1164,11 @@ body.dark,
   gap: 0.125rem;
 }
 
+.actions-dropdown-menu .actions-dropdown-left {
+  right: auto;
+  left: 0;
+}
+
 .actions-dropdown:hover .actions-dropdown-menu {
   display: flex;
 }
