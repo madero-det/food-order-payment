@@ -1148,18 +1148,23 @@ body.dark,
   border-radius: 6px;
 }
 
+/* Prevent table cell from clipping dropdown */
+td .actions-dropdown {
+  overflow: visible;
+}
+
 .actions-dropdown-menu {
   display: none;
   position: absolute;
   right: 0;
   top: 100%;
-  z-index: 50;
+  z-index: 100;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   padding: 0.35rem;
-  min-width: 180px;
+  min-width: 160px;
   flex-direction: column;
   gap: 0.125rem;
 }
