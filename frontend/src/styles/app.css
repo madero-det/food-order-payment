@@ -1133,6 +1133,66 @@ body.dark,
   border-color: #374151;
 }
 
+.actions-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.actions-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.actions-dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 0.35rem;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.actions-dropdown:hover .actions-dropdown-menu {
+  display: flex;
+}
+
+.actions-dropdown-menu .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+}
+
+.actions-dropdown-menu .btn:hover {
+  background: #f3f4f6;
+}
+
+.dark .actions-dropdown-menu {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .actions-dropdown-menu .btn:hover {
+  background: #374151;
+}
+
 .person-card-name {
   font-weight: 600;
   font-size: 0.9rem;

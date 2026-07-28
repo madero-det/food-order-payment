@@ -46,45 +46,58 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
   );
 
   const renderActions = (order) => (
-    <div className="table-actions" style={{ gap: '0.25rem' }}>
-      {order.paid_amount == null && (
-        <button className="btn btn-success btn-sm" title="Pay" onClick={() => onPay(order.id)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </button>
-      )}
-      {isAdmin && order.payment_status === 'pending' && (
-        <div className="btn-group">
-          <button className="btn btn-success btn-sm" title="Approve" onClick={() => onApprove(order.id)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          </button>
-          <button className="btn btn-danger btn-sm" title="Reject" onClick={() => onReject(order.id)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      )}
-      <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => onEdit(order)}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+    <div className="actions-dropdown">
+      <button className="btn btn-ghost btn-sm actions-dots" title="Actions">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
       </button>
-      {order.deletion_status === 'pending' ? (
-        isAdmin ? (
-          <div className="btn-group">
-            <button className="btn btn-danger btn-sm" title="Approve Deletion" onClick={() => onApproveDeletion(order.id)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-            <button className="btn btn-warning btn-sm" title="Cancel Deletion" onClick={() => onCancelDeletion(order.id)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-        ) : (
-          <button className="btn btn-ghost btn-sm" title="Delete Pending" disabled style={{ opacity: 0.5 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <div className="actions-dropdown-menu">
+        {order.paid_amount == null && (
+          <button className="btn btn-ghost btn-sm" onClick={() => onPay(order.id)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Pay</span>
           </button>
-        )
-      ) : (
-        <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => onDelete(order.id)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        )}
+        {isAdmin && order.payment_status === 'pending' && (
+          <>
+            <button className="btn btn-ghost btn-sm" onClick={() => onApprove(order.id)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Approve</span>
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => onReject(order.id)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span>Reject</span>
+            </button>
+          </>
+        )}
+        <button className="btn btn-ghost btn-sm" onClick={() => onEdit(order)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          <span>Edit</span>
         </button>
-      )}
+        {order.deletion_status === 'pending' ? (
+          isAdmin ? (
+            <>
+              <button className="btn btn-ghost btn-sm" onClick={() => onApproveDeletion(order.id)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Approve Delete</span>
+              </button>
+              <button className="btn btn-ghost btn-sm" onClick={() => onCancelDeletion(order.id)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <span>Cancel Delete</span>
+              </button>
+            </>
+          ) : (
+            <button className="btn btn-ghost btn-sm" disabled style={{ opacity: 0.5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Delete Pending</span>
+            </button>
+          )
+        ) : (
+          <button className="btn btn-ghost btn-sm" onClick={() => onDelete(order.id)} style={{ color: '#dc2626' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            <span>Delete</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 
