@@ -60,20 +60,23 @@ Manage daily orders. Accessible from the sidebar: **Orders**.
 
 ### Creating an Order
 1. Click **+ New Order**
-2. Select the **person** (admin only), enter **price** (auto-fills from default price if set)
-3. Optionally add **Notes** (e.g., menu item, special requests)
-4. Select **Payment Method** (Cash or Bank Transfer)
-5. Optionally enter **paid amount** and **transaction date**
-6. Click **Save**
+2. Select the **person** (admin only), choose food items from the dropdown
+3. ☑ Check **Rice** to auto-add rice (if available)
+4. Use the **+** button to add items, **×** to remove
+5. Adjust **quantity** (1–5) for each item
+6. Optionally add **Notes** (e.g., "no chili") — shown in parentheses after items
+7. Select **Payment Method** (Cash or Bank Transfer)
+8. If Cash → Transaction Date is disabled (not required)
+9. Click **Save**
 
-### Editing an Order
-1. Click the **pencil icon** on any order
-2. Modify fields and click **Save**
+### Food Menu Items
+The order form shows food items grouped by **Food** and **Dessert** categories. Items marked as unavailable by admin won't appear. Rice items get their own checkbox shortcut.
 
 ### Paying an Order
 1. Click the **checkmark icon** on an unpaid order
-2. Enter the **transaction date & time**
-3. Click **Confirm Pay**
+2. Select **Payment Method** (Cash / Bank Transfer)
+3. If Cash → Transaction Date is disabled (not required)
+4. Click **Confirm Pay**
 
 **For users:** Payment goes to pending approval. Admin is notified via Telegram.
 **For admins:** Payment is auto-approved. User receives notification.
@@ -119,23 +122,47 @@ Shows only your own orders. Same date filtering and pagination as above.
 
 Manage all team members. Accessible from sidebar: **Persons**.
 
-### Viewing Persons
-Table shows: Avatar, Name, Role, and Actions.
+### Card Layout
+Persons are displayed in a 3-column grid of cards (2 on tablet, 1 on mobile):
+- **Left**: Avatar (hover shows camera icon to change). Click avatar to preview full-size image.
+- **Middle**: Name (clickable → orders) + Role badge + "Click avatar to preview / Preview" link
+- **Right**: Action buttons (Edit, Reset Password, Delete)
 
 ### Actions
-- **Edit** *(pencil)* — Change name or role
+- **Edit** *(pencil)* — Change name, role, or default price
 - **Reset Password** *(key)* — Set a new password for this person
-- **Delete** *(trash)* — Remove the person (only if they have no orders)
+- **Delete** *(trash)* — Remove the person
 
 ### Adding a Person
 1. Click **+ New Person**
 2. Enter name, role, and password
 3. Click **Save**
 
-### Uploading Profile Image
-1. Click the **camera icon** on a person's avatar
+### Profile Image
+1. Hover over avatar → click camera icon
 2. Select an image, crop if needed
-3. Click **Save** — image is uploaded to Cloudinary
+3. Click **Save** — uploaded to Cloudinary
+
+---
+
+## Menu Page *(admin only)*
+
+Manage food menu items. Accessible from sidebar: **Menu**.
+
+### Menu Items
+Each item has: Name, Type (Food/Dessert), Price, Rice flag, Available toggle.
+
+### Adding an Item
+1. Click **+ New Item**
+2. Enter **Name**, **Price**, select **Type** (Food/Dessert)
+3. ☑ Check **Rice** if this is the rice item (gets checkbox shortcut in order form)
+4. ☑ Check **Available** to make it visible in order form
+
+### Toggling Availability
+Click the toggle switch in the **Avail** column to instantly enable/disable an item. Unavailable items are hidden from the order form.
+
+### Editing an Item
+Click the **pencil icon** to edit name, price, type, rice flag, or availability.
 
 ---
 
@@ -240,8 +267,12 @@ The mobile app connects to the same backend server. Ensure your device has inter
 ## Tips
 
 - **Real-time updates:** The app uses Server-Sent Events (SSE) for live updates. Dashboard, Orders, and Person Orders auto-refresh when changes happen.
-- **Telegram bot:** Approvals can be handled directly from Telegram without opening the web app.
+- **Telegram bot:** Approvals can be handled directly from Telegram without opening the web app. Daily 8 PM unpaid reminder sent automatically.
 - **Date shortcuts:** On the Orders page, click **Today** to jump to the current date. Use the month selector on Dashboard to view historical data.
 - **Notification clicks:** Click any notification to jump directly to the relevant order date page.
 - **Mobile:** The app works as a Progressive Web App (PWA). On Android/iOS, you can "Add to Home Screen" for a native-like experience.
-- **Keyboard shortcuts:** The Orders page supports tab navigation between form fields.
+- **Dark Mode:** Click the sun/moon icon in the navbar to toggle dark mode. Preference is saved.
+- **Excel Export:** Download monthly reports from the Dashboard for accounting.
+- **Menu Management:** Admin can set default prices per person and manage food item availability.
+- **Quick Rice:** If a rice item is configured, it appears as a checkbox shortcut in the order form.
+- **Notifications go where you need them:** Browser push + toast + in-app bell badge + Telegram group. All coordinated.
