@@ -187,7 +187,7 @@ export default function Persons({ user, onUserUpdate }) {
             {persons.map((p) => (
               <div className="person-card card" key={p.id}>
                 {isAdmin && (
-                  <div className="person-card-menu actions-dropdown">
+                  <div className="person-card-menu">
                     <button className="btn btn-ghost btn-sm actions-dots" title="Actions">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                     </button>

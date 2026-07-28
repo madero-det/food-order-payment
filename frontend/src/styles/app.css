@@ -1098,6 +1098,10 @@ body.dark,
   right: 0.5rem;
 }
 
+.person-card-menu:hover .actions-dropdown-menu {
+  display: flex;
+}
+
 .person-card-avatar {
   flex-shrink: 0;
 }
