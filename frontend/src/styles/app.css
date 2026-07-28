@@ -1173,6 +1173,13 @@ td .actions-dropdown {
   overflow: visible;
 }
 
+.table-wrapper,
+.table-scroll,
+.card table,
+.card tbody {
+  overflow: visible !important;
+}
+
 .actions-dropdown-menu {
   display: none;
   position: absolute;
