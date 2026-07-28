@@ -105,6 +105,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
     <>
     {/* Desktop table */}
     <div className="table-wrapper">
+    <div className="table-scroll">
     <table>
       <thead>
         <tr>
@@ -160,6 +161,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
         ))}
       </tbody>
     </table>
+    </div>
     </div>
 
     {/* Mobile cards */}

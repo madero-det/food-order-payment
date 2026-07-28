@@ -208,6 +208,7 @@ export default function PersonOrders() {
         ) : (
           <>
           <div className="table-wrapper">
+          <div className="table-scroll">
           <table>
             <thead>
               <tr>
@@ -252,6 +253,7 @@ export default function PersonOrders() {
               ))}
             </tbody>
           </table>
+          </div>
           </div>
 
           <div className="mobile-cards">

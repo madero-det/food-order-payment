@@ -160,6 +160,7 @@ export default function Dashboard() {
             ) : (
               <>
               <div className="table-wrapper">
+              <div className="table-scroll">
               <table>
                 <thead>
                   <tr>
@@ -205,6 +206,7 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+              </div>
               </div>
 
               <div className="mobile-cards">
