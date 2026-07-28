@@ -1150,6 +1150,12 @@ body.dark,
 .actions-dropdown {
   position: relative;
   display: inline-flex;
+  z-index: 1;
+}
+
+.actions-dropdown:hover .actions-dropdown-menu {
+  display: flex;
+  z-index: 2;
 }
 
 .actions-dots {
@@ -1172,7 +1178,6 @@ td .actions-dropdown {
   position: absolute;
   right: 0;
   top: 100%;
-  z-index: 100;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
