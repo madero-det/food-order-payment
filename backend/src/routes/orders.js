@@ -220,7 +220,7 @@ router.post('/', async (req, res, next) => {
     const personAvatar = personResult.rows[0].profile_image;
 
     const orderItems = items?.length ? await pool.query(
-      `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
+      `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type, mi.is_rice
        FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
        WHERE oi.order_id = $1 ORDER BY oi.id`, [order.id]
     ) : { rows: [] };
@@ -307,7 +307,7 @@ router.put('/:id', async (req, res, next) => {
       }
 
       const orderItems = await pool.query(
-        `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
+        `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type, mi.is_rice
          FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
          WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
       );
@@ -371,7 +371,7 @@ router.put('/:id', async (req, res, next) => {
     }
 
     const orderItems = items?.length ? await pool.query(
-      `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type
+      `SELECT oi.id, oi.menu_item_id, oi.quantity, oi.price, mi.name, mi.type, mi.is_rice
        FROM order_items oi JOIN menu_items mi ON oi.menu_item_id = mi.id
        WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
     ) : { rows: [] };

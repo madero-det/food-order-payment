@@ -4,6 +4,15 @@ function getInitials(name) {
   return name ? name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
 }
 
+function sortItems(items) {
+  if (!items || !items.length) return items;
+  return [...items].sort((a, b) => {
+    if (a.is_rice || a.type === 'rice') return 1;
+    if (b.is_rice || b.type === 'rice') return -1;
+    return 0;
+  });
+}
+
 export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove, onReject, onApproveDeletion, onCancelDeletion, isAdmin }) {
   if (orders.length === 0) {
     return <div className="empty-state">No orders for this date</div>;
@@ -140,7 +149,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
             <td style={{ fontSize: '0.85rem' }}>
               {order.items && order.items.length > 0 ? (
                 <span>
-                  <span style={{ color: '#2563eb' }}>{order.items.map(i => i.name).join(', ')}</span>
+                  <span style={{ color: '#2563eb' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
                   {order.notes && <span style={{ color: '#d97706' }}> ({order.notes})</span>}
                 </span>
               ) : order.notes ? (
@@ -186,7 +195,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
               <div className="order-card-row">
                 <span className="label">Items</span>
                 <span className="value">
-                  <span style={{ color: '#2563eb' }}>{order.items.map(i => i.name).join(', ')}</span>
+                  <span style={{ color: '#2563eb' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
                   {order.notes && <span style={{ color: '#d97706' }}> ({order.notes})</span>}
                 </span>
               </div>
