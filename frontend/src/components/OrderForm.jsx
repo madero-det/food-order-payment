@@ -52,21 +52,12 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
   });
 
     const [selectedItems, setSelectedItems] = useState(initItems);
-    const [newItemId, setNewItemId] = useState('');
 
     const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0);
 
     useEffect(() => {
       setFormData(prev => ({ ...prev, price: totalPrice || prev.price }));
     }, [totalPrice]);
-
-    const addItem = () => {
-      if (!newItemId) return;
-      const item = menuItems.find(m => m.id === Number(newItemId));
-      if (!item) return;
-      setSelectedItems(prev => [...prev, { menu_item_id: item.id, quantity: 1, price: item.price, id: Date.now() + Math.random() }]);
-      setNewItemId('');
-    };
 
     const removeItem = (uid) => {
     setSelectedItems(prev => prev.filter(i => i.id !== uid));
@@ -181,53 +172,66 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
         </div>
       )}
 
-      <div style={{ marginTop: '0.75rem' }}>
-        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#6b7280', marginBottom: '0.25rem' }}>
-          Food Items
-        </label>
-        {riceItem && (
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-            <input type="checkbox" checked={hasRice} onChange={toggleRice} style={{ width: 16, height: 16, outline: 'none' }} />
-            {riceItem.name} ({Number(riceItem.price).toLocaleString()} R)
-          </label>
-        )}
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <select value={newItemId} onChange={(e) => setNewItemId(e.target.value)} style={{ flex: 1, padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', outline: 'none' }}>
-            <option value="">- Add item -</option>
-            {foodItems.length > 0 && <optgroup label="Food" />}
-            {foodItems.map(m => (
-              <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-            ))}
-            {dessertItems.length > 0 && <optgroup label="Dessert" />}
-            {dessertItems.map(m => (
-              <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-            ))}
-          </select>
-          <button type="button" className="btn btn-primary btn-sm" onClick={addItem}>+</button>
+      <div className="food-items-section" style={{ marginTop: '0.75rem' }}>
+        <div className="food-items-header">
+          <span className="food-items-title">FOOD ITEMS</span>
+          {riceItem && (
+            <label className="food-items-rice-check">
+              <input type="checkbox" checked={hasRice} onChange={toggleRice} />
+              <span>Add Rice ({Number(riceItem.price).toLocaleString()} R)</span>
+            </label>
+          )}
         </div>
 
-        {selectedItems.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '0.5rem' }}>
-            {selectedItems.map((si) => {
-              const mi = menuItems.find(m => m.id === Number(si.menu_item_id));
-              return (
-                <div key={si.id} className="selected-item-row" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f3f4f6', padding: '0.35rem 0.6rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-                  <span style={{ flex: 1 }}>{mi?.name || 'Item'} {mi?.type === 'dessert' ? '(Dessert)' : ''}</span>
-                  <span style={{ color: '#6b7280' }}>
-                    <select value={si.quantity} onChange={(e) => updateQty(si.id, Number(e.target.value))} style={{ padding: '0.1rem 0.3rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.8rem' }}>
-                      {[1,2,3,4,5].map(q => <option key={q} value={q}>{q}</option>)}
-                    </select>{' '}
-                    × {Number(si.price).toLocaleString()} R = <strong>{(Number(si.price) * si.quantity).toLocaleString()} R</strong>
-                  </span>
-                  <button type="button" onClick={() => removeItem(si.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }}>×</button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {selectedItems.map((si) => {
+          const mi = menuItems.find(m => m.id === Number(si.menu_item_id));
+          return (
+            <div className="food-item-row" key={si.id}>
+              <select
+                value={si.menu_item_id}
+                onChange={(e) => {
+                  const mid = Number(e.target.value);
+                  if (!mid) return;
+                  const item = menuItems.find(m => m.id === mid);
+                  setSelectedItems(prev => prev.map(i => i.id === si.id ? { ...i, menu_item_id: mid, price: item?.price || 0 } : i));
+                }}
+                className="food-item-select"
+              >
+                <option value="">Select Food</option>
+                {foodItems.length > 0 && <optgroup label="Food" />}
+                {foodItems.map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+                ))}
+                {dessertItems.length > 0 && <optgroup label="Dessert" />}
+                {dessertItems.map(m => (
+                  <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+                ))}
+              </select>
+              <div className="food-qty-wrap">
+                <button type="button" className="food-qty-btn" onClick={() => updateQty(si.id, (si.quantity || 1) - 1)} disabled={(si.quantity || 1) <= 1}>−</button>
+                <span className="food-qty-val">{si.quantity || 1}</span>
+                <button type="button" className="food-qty-btn" onClick={() => updateQty(si.id, (si.quantity || 1) + 1)}>+</button>
+              </div>
+              <button type="button" className="food-item-del" onClick={() => removeItem(si.id)} title="Remove">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              </button>
+            </div>
+          );
+        })}
+
+        <button
+          type="button"
+          className="food-add-another"
+          onClick={() => {
+            setSelectedItems(prev => [...prev, { menu_item_id: '', quantity: 1, price: 0, id: Date.now() + Math.random() }]);
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Add Another Item
+        </button>
 
         {selectedItems.length > 0 && (
-          <div className="food-total" style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+          <div className="food-total" style={{ fontSize: '0.9rem', fontWeight: 600, marginTop: '0.5rem' }}>
             Total: {totalPrice.toLocaleString()} R
           </div>
         )}
