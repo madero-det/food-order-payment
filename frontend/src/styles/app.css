@@ -1099,10 +1099,12 @@ body.dark,
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  z-index: 1;
 }
 
 .person-card-menu:hover .actions-dropdown-menu {
   display: flex;
+  z-index: 2;
 }
 
 .person-card-avatar {
