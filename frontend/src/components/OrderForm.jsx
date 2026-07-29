@@ -185,28 +185,35 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
         {selectedItems.map((si) => {
           const mi = menuItems.find(m => m.id === Number(si.menu_item_id));
+          const isRice = mi?.is_rice;
           return (
             <div className="food-item-row" key={si.id}>
-              <select
-                value={si.menu_item_id}
-                onChange={(e) => {
-                  const mid = Number(e.target.value);
-                  if (!mid) return;
-                  const item = menuItems.find(m => m.id === mid);
-                  setSelectedItems(prev => prev.map(i => i.id === si.id ? { ...i, menu_item_id: mid, price: item?.price || 0 } : i));
-                }}
-                className="food-item-select"
-              >
-                <option value="">Select Food</option>
-                {foodItems.length > 0 && <optgroup label="Food" />}
-                {foodItems.map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-                ))}
-                {dessertItems.length > 0 && <optgroup label="Dessert" />}
-                {dessertItems.map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
-                ))}
-              </select>
+              {isRice ? (
+                <span className="food-item-select" style={{ display: 'flex', alignItems: 'center', fontWeight: 500, color: '#1a1a2e' }}>
+                  {mi.name} ({Number(mi.price).toLocaleString()} R)
+                </span>
+              ) : (
+                <select
+                  value={si.menu_item_id}
+                  onChange={(e) => {
+                    const mid = Number(e.target.value);
+                    if (!mid) return;
+                    const item = menuItems.find(m => m.id === mid);
+                    setSelectedItems(prev => prev.map(i => i.id === si.id ? { ...i, menu_item_id: mid, price: item?.price || 0 } : i));
+                  }}
+                  className="food-item-select"
+                >
+                  <option value="">Select Food</option>
+                  {foodItems.length > 0 && <optgroup label="Food" />}
+                  {foodItems.map(m => (
+                    <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+                  ))}
+                  {dessertItems.length > 0 && <optgroup label="Dessert" />}
+                  {dessertItems.map(m => (
+                    <option key={m.id} value={m.id}>{m.name} ({Number(m.price).toLocaleString()} R)</option>
+                  ))}
+                </select>
+              )}
               <div className="food-qty-wrap">
                 <button type="button" className="food-qty-btn" onClick={() => updateQty(si.id, (si.quantity || 1) - 1)} disabled={(si.quantity || 1) <= 1}>−</button>
                 <span className="food-qty-val">{si.quantity || 1}</span>
