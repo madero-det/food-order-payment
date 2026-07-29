@@ -4,7 +4,7 @@ import { requireAdmin } from '../middleware/auth.js';
 import { sendPaymentNotification, sendDeletionNotification, editMessageText } from '../telegram.js';
 import { broadcast } from '../events.js';
 import { saveAdminPaymentNotification } from '../notifications.js';
-import { khmNow, khmDate } from '../khm-datetime.js';
+import { khmNow } from '../khm-datetime.js';
 
 const router = Router();
 
@@ -28,7 +28,6 @@ router.get('/', async (req, res, next) => {
   try {
     const { date, start_date, end_date, person_id, paid, page, limit } = req.query;
     const isAdmin = req.user.role === 'admin';
-    const todayStr = khmDate();
     const pgNum = Math.max(1, parseInt(page) || 1);
     const pgSize = Math.min(100, Math.max(1, parseInt(limit) || 20));
     const offset = (pgNum - 1) * pgSize;
@@ -37,9 +36,7 @@ router.get('/', async (req, res, next) => {
     const params = [];
     let paramIndex = 1;
 
-    const isTodayQuery = date && date === todayStr;
-
-    if (!isAdmin && !isTodayQuery) {
+    if (!isAdmin) {
       whereClause += ` AND fo.person_id = $${paramIndex++}`;
       params.push(req.user.id);
     }
@@ -123,14 +120,12 @@ router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const isAdmin = req.user.role === 'admin';
-    const todayStr = khmDate();
 
-    const check = await pool.query('SELECT person_id, order_date FROM food_orders WHERE id = $1', [id]);
+    const check = await pool.query('SELECT person_id FROM food_orders WHERE id = $1', [id]);
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
-    const isTodayOrder = String(check.rows[0].order_date).substring(0, 10) === todayStr;
-    if (!isAdmin && !isTodayOrder && check.rows[0].person_id !== req.user.id) {
+    if (!isAdmin && check.rows[0].person_id !== req.user.id) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
