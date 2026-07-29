@@ -189,7 +189,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           return (
             <div className="food-item-row" key={si.id}>
               {isRice ? (
-                <span className="food-item-select" style={{ display: 'flex', alignItems: 'center', fontWeight: 500, color: '#1a1a2e' }}>
+                <span className="food-item-rice-name">
                   {mi.name} ({Number(mi.price).toLocaleString()} R)
                 </span>
               ) : (
