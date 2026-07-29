@@ -82,8 +82,10 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     onSubmit(data);
   };
 
-  const foodItems = menuItems.filter(m => m.type !== 'dessert' && !m.is_rice && m.is_available !== false);
-  const dessertItems = menuItems.filter(m => m.type === 'dessert' && !m.is_rice && m.is_available !== false);
+  const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; })();
+  const isToday = formData.order_date === todayStr;
+  const foodItems = menuItems.filter(m => m.type !== 'dessert' && !m.is_rice && (isToday ? m.is_available !== false : true));
+  const dessertItems = menuItems.filter(m => m.type === 'dessert' && !m.is_rice && (isToday ? m.is_available !== false : true));
     const riceItem = menuItems.find(m => m.is_rice);
   const hasRice = selectedItems.some(si => riceItem && si.menu_item_id === riceItem.id);
 
