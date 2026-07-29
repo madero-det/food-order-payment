@@ -140,7 +140,7 @@ router.get('/:id', async (req, res, next) => {
               p.id as person_id, p.name as person_name, p.profile_image as person_avatar,
               COALESCE(json_agg(json_build_object(
                 'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
-                'name', mi.name, 'type', mi.type
+                'name', mi.name, 'type', mi.type, 'is_rice', mi.is_rice
               ) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) as items
        FROM food_orders fo
        JOIN persons p ON fo.person_id = p.id
