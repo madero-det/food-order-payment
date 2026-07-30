@@ -659,7 +659,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .table-wrapper tbody tr {
-  animation: fadeInUp 0.3s ease both;
+  animation: fadeInUp 0.3s ease backwards;
 }
 
 .table-wrapper tbody tr:nth-child(1) { animation-delay: 0s; }
@@ -1352,7 +1352,7 @@ body.dark,
 }
 
 .actions-dropdown:hover {
-  z-index: 3;
+  z-index: 100;
 }
 
 .actions-dropdown:hover .actions-dropdown-menu {
@@ -1386,6 +1386,7 @@ td .actions-dropdown {
   position: absolute;
   right: 0;
   top: 100%;
+  z-index: 100;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;

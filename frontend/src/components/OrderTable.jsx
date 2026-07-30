@@ -165,7 +165,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
             <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
             <td className="hide-mobile">{formatDate(order.transaction_date)}</td>
             <td>{renderBadges(order)}</td>
-            <td className="text-right" style={{ position: 'relative' }}>{renderActions(order)}</td>
+            <td className="text-right">{renderActions(order)}</td>
           </tr>
         ))}
       </tbody>
