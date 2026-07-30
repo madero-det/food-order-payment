@@ -83,98 +83,100 @@ export default function MenuPage() {
   };
 
   return (
-    <div>
-      <div className="page-header">
-        <h1>Menu</h1>
-        {!editingId && (
-          <button className="btn btn-primary" onClick={() => { setName(''); setPrice(''); setEditingId('new'); }}>
-            + New Item
-          </button>
-        )}
-      </div>
-
-      {editingId && (
-        <div className="card">
-          <form onSubmit={handleSubmit}>
-            {error && <div className="alert alert-error">{error}</div>}
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 2 }}>
-                <label>Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Fried Rice" required />
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>Price (Riel)</label>
-                <input type="number" min="0" step="100" value={price} onChange={(e) => setPrice(e.target.value)} required />
-              </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>Type</label>
-                <select value={type} onChange={(e) => setType(e.target.value)}>
-                  <option value="food">Food</option>
-                  <option value="dessert">Dessert</option>
-                </select>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-                  <input type="checkbox" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
-                  Rice
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.3rem', cursor: 'pointer', fontSize: '0.85rem' }}>
-                  <input type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
-                  Available
-                </label>
-              </div>
-            </div>
-            <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={handleCancel}>Cancel</button>
-              <button type="submit" className="btn btn-primary">{editingId === 'new' ? 'Add' : 'Save'}</button>
-            </div>
-          </form>
+    <>
+      <div className="animate-fade-in-up">
+        <div className="page-header">
+          <h1>Menu</h1>
+          {!editingId && (
+            <button className="btn btn-primary" onClick={() => { setName(''); setPrice(''); setEditingId('new'); }}>
+              + New Item
+            </button>
+          )}
         </div>
-      )}
 
-      <div className="card" style={{ marginTop: '1rem' }}>
-        {loading ? (
-          <div className="empty-state">Loading...</div>
-        ) : items.length === 0 ? (
-          <div className="empty-state">No menu items yet.</div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Price</th>
-                <th>Avail</th>
-                <th className="text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, idx) => (
-                <tr key={item.id}>
-                  <td>{idx + 1}</td>
-                  <td><strong>{item.name}</strong></td>
-                  <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
-                  <td>{Number(item.price).toLocaleString()} R</td>
-                  <td>
-                    <label className="toggle-switch" style={{ margin: 0 }}>
-                      <input type="checkbox" checked={item.is_available !== false} onChange={() => handleToggleAvailable(item)} />
-                      <span className="toggle-slider" />
-                    </label>
-                  </td>
-                  <td>
-                    <div className="table-actions">
-                      <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => handleEdit(item)}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                      </button>
-                      <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => setDeleteModal({ show: true, id: item.id })}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {editingId && (
+          <div className="card">
+            <form onSubmit={handleSubmit}>
+              {error && <div className="alert alert-error">{error}</div>}
+              <div className="form-row">
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label>Name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Fried Rice" required />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Price (Riel)</label>
+                  <input type="number" min="0" step="100" value={price} onChange={(e) => setPrice(e.target.value)} required />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Type</label>
+                  <select value={type} onChange={(e) => setType(e.target.value)}>
+                    <option value="food">Food</option>
+                    <option value="dessert">Dessert</option>
+                  </select>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.4rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input type="checkbox" checked={isRice} onChange={(e) => setIsRice(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
+                    Rice
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.3rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                    <input type="checkbox" checked={isAvailable} onChange={(e) => setIsAvailable(e.target.checked)} style={{ width: 14, height: 14, outline: 'none' }} />
+                    Available
+                  </label>
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn btn-ghost" onClick={handleCancel}>Cancel</button>
+                <button type="submit" className="btn btn-primary">{editingId === 'new' ? 'Add' : 'Save'}</button>
+              </div>
+            </form>
+          </div>
         )}
+
+        <div className="card" style={{ marginTop: '1rem' }}>
+          {loading ? (
+            <div className="empty-state">Loading...</div>
+          ) : items.length === 0 ? (
+            <div className="empty-state">No menu items yet.</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Price</th>
+                  <th>Avail</th>
+                  <th className="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td>{idx + 1}</td>
+                    <td><strong>{item.name}</strong></td>
+                    <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
+                    <td>{Number(item.price).toLocaleString()} R</td>
+                    <td>
+                      <label className="toggle-switch" style={{ margin: 0 }}>
+                        <input type="checkbox" checked={item.is_available !== false} onChange={() => handleToggleAvailable(item)} />
+                        <span className="toggle-slider" />
+                      </label>
+                    </td>
+                    <td>
+                      <div className="table-actions">
+                        <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => handleEdit(item)}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        </button>
+                        <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => setDeleteModal({ show: true, id: item.id })}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {deleteModal.show && (
@@ -189,6 +191,6 @@ export default function MenuPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

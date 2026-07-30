@@ -98,100 +98,102 @@ export default function Settings({ onUserUpdate }) {
   const avatarUrl = getImageUrl(user?.profile_image);
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
-      <div className="page-header">
-        <h1>Settings</h1>
-      </div>
-
-      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-        <div className="avatar-upload" onClick={handleAvatarClick}>
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={user.name} className="avatar" style={{ width: 64, height: 64 }} />
-          ) : (
-            <div className="avatar avatar-initials" style={{ width: 64, height: 64, fontSize: '1.3rem' }}>
-              {getInitials(user.name)}
-            </div>
-          )}
-          <div className="settings-avatar-hover">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          </div>
-          <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
+    <>
+      <div style={{ maxWidth: '400px', margin: '2rem auto' }} className="animate-fade-in-up">
+        <div className="page-header">
+          <h1>Settings</h1>
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{user.name}</div>
-          <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
-            Click avatar to change
-            {avatarUrl && (
-              <span> · <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>Preview</button></span>
+
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <div className="avatar-upload" onClick={handleAvatarClick}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={user.name} className="avatar" style={{ width: 64, height: 64 }} />
+            ) : (
+              <div className="avatar avatar-initials" style={{ width: 64, height: 64, fontSize: '1.3rem' }}>
+                {getInitials(user.name)}
+              </div>
             )}
+            <div className="settings-avatar-hover">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
           </div>
-        </div>
-      </div>
-
-      {cropSrc && <CropModal imageSrc={cropSrc} onCrop={handleCrop} onCancel={() => setCropSrc(null)} />}
-
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <div>
-              <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>Push Notifications</div>
-              <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Get notified when payments are approved/rejected</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{user.name}</div>
+            <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.25rem' }}>
+              Click avatar to change
+              {avatarUrl && (
+                <span> · <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.8rem', padding: 0 }}>Preview</button></span>
+              )}
             </div>
           </div>
-          <button
-            className={`btn btn-sm ${notifPermission === 'granted' ? 'btn-success' : 'btn-ghost'}`}
-            onClick={handleNotifToggle}
-            style={{ minWidth: '80px' }}
-          >
-            {notifPermission === 'granted' ? 'On' : 'Enable'}
-          </button>
         </div>
-        {notifPermission === 'denied' && (
-          <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#dc2626' }}>
-            Notifications blocked. Enable in browser settings.
-          </p>
-        )}
-      </div>
 
-      <div className="card">
-        <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error">{error}</div>}
-          {success && <div className="alert alert-success">{success}</div>}
-          <div className="form-group">
-            <label>Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter current password"
-            />
-          </div>
-          <div className="form-group">
-            <label>New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password"
-            />
-          </div>
-          <div className="form-group">
-            <label>Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
-            />
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Changing...' : 'Change Password'}
+        {cropSrc && <CropModal imageSrc={cropSrc} onCrop={handleCrop} onCancel={() => setCropSrc(null)} />}
+
+        <div className="card" style={{ marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <div>
+                <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>Push Notifications</div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Get notified when payments are approved/rejected</div>
+              </div>
+            </div>
+            <button
+              className={`btn btn-sm ${notifPermission === 'granted' ? 'btn-success' : 'btn-ghost'}`}
+              onClick={handleNotifToggle}
+              style={{ minWidth: '80px' }}
+            >
+              {notifPermission === 'granted' ? 'On' : 'Enable'}
             </button>
           </div>
-        </form>
+          {notifPermission === 'denied' && (
+            <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#dc2626' }}>
+              Notifications blocked. Enable in browser settings.
+            </p>
+          )}
+        </div>
+
+        <div className="card">
+          <form onSubmit={handleSubmit}>
+            {error && <div className="alert alert-error">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
+            <div className="form-group">
+              <label>Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+              />
+            </div>
+            <div className="form-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="form-group">
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Changing...' : 'Change Password'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
 
       {previewOpen && avatarUrl && (
@@ -204,6 +206,6 @@ export default function Settings({ onUserUpdate }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

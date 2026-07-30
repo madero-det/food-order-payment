@@ -39,7 +39,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   const initItems = initialData.items && initialData.items.length
     ? initialData.items.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity || 1, price: i.price, id: Date.now() + Math.random() }))
-    : [];
+    : [{ menu_item_id: '', quantity: 1, price: 0, id: Date.now() + Math.random() }];
 
   const [formData, setFormData] = useState({
     order_date: toDateInput(initialData.order_date) || (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; })(),
@@ -48,7 +48,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     paid_amount: toPriceString(initialData.paid_amount),
     transaction_date: toDatetimeInput(initialData.transaction_date),
     notes: initialData.notes || '',
-    payment_method: initialData.payment_method || '',
+    payment_method: initialData.payment_method || (isEditing ? (initialData.payment_method || '') : 'bank'),
   });
 
     const [selectedItems, setSelectedItems] = useState(initItems);
@@ -176,7 +176,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
       <div className="food-items-section" style={{ marginTop: '0.75rem' }}>
         <div className="food-items-header">
-          <span className="food-items-title">FOOD ITEMS</span>
+          <span className="food-items-title">Food Items</span>
           {riceItem && (
             <label className="food-items-rice-check">
               <input type="checkbox" checked={hasRice} onChange={toggleRice} />
@@ -246,43 +246,54 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
         )}
       </div>
 
+      <div className="form-group" style={{ marginTop: '0.5rem' }}>
+        <label>Notes</label>
+        <input
+          type="text"
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="e.g., no chili"
+        />
+      </div>
       <div className="form-row" style={{ marginTop: '0.5rem' }}>
         <div className="form-group">
-          <label>Notes</label>
-          <input
-            type="text"
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="e.g., no chili"
-          />
+          <label>Payment Method</label>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {[
+              { value: 'cash', label: 'Cash', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+              { value: 'bank', label: 'Bank Transfer', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> },
+            ].map((opt) => {
+              const isSelected = formData.payment_method === opt.value;
+              const isDisabled = !isAdmin && isEditing;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  disabled={isDisabled}
+                  className={`payment-method-card${isSelected ? ' selected' : ''}`}
+                  onClick={() => setFormData({ ...formData, payment_method: isSelected ? '' : opt.value })}
+                >
+                  {opt.icon}
+                  <span style={{ fontSize: '0.72rem' }}>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className="form-group">
-          <label>Payment Method</label>
-          <select
-            value={formData.payment_method}
-            onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-            disabled={!isAdmin && isEditing}
-            className={(!isAdmin && isEditing) ? 'input-disabled' : ''}
-          >
-            <option value="">-</option>
-            <option value="cash">Cash</option>
-            <option value="bank">Bank Transfer</option>
-          </select>
+          <label>Transaction Date & Time</label>
+          <input
+            type="datetime-local"
+            value={formData.transaction_date}
+            onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
+            disabled={formData.payment_method === 'cash'}
+            className={formData.payment_method === 'cash' ? 'input-disabled' : ''}
+            style={{ width: '100%' }}
+          />
+          {formData.payment_method === 'cash' && (
+            <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.2rem' }}>Disabled for cash payments</div>
+          )}
         </div>
-      </div>
-      <div className="form-group" style={{ marginTop: '0.5rem' }}>
-        <label>Transaction Date & Time</label>
-        <input
-          type="datetime-local"
-          value={formData.transaction_date}
-          onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-          disabled={formData.payment_method === 'cash'}
-          className={formData.payment_method === 'cash' ? 'input-disabled' : ''}
-          style={{ width: '100%' }}
-        />
-        {formData.payment_method === 'cash' && (
-          <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.2rem' }}>Disabled for cash payments</div>
-        )}
       </div>
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
         <button type="submit" className="btn btn-primary">Save</button>

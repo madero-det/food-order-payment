@@ -305,27 +305,47 @@ export default function DailyOrders() {
   const totalPaid = orders.reduce((sum, o) => sum + Number(o.paid_amount || 0), 0);
 
   return (
-    <div>
-      <div className="page-header">
-        <h1>Daily Orders</h1>
-        <DateSelector date={date} onChange={handleDateChange} />
-      </div>
-
-      <div className="card">
-        <div className="card-header">
-          <div className="daily-summary">
-            <div>Orders: <span>{orders.length}</span></div>
-            <div>Total: <span>{totalPrice.toLocaleString()} R</span></div>
-            <div>Paid: <span>{totalPaid.toLocaleString()} R</span></div>
-            <div>Unpaid: <span style={{ color: '#dc2626' }}>{(totalPrice - totalPaid).toLocaleString()} R</span></div>
-          </div>
-          <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingOrder(null); }}>
-            {showForm ? 'Close' : '+ New Order'}
-          </button>
+    <>
+      <div className="animate-fade-in-up">
+        <div className="page-header">
+          <h1>Daily Orders</h1>
+          <DateSelector date={date} onChange={handleDateChange} />
         </div>
 
-        {showForm && (
-          <div className="order-form-area">
+        <div className="card">
+          <div className="card-header">
+            <div className="daily-summary">
+              <div>Orders: <span>{orders.length}</span></div>
+              <div>Total: <span>{totalPrice.toLocaleString()} R</span></div>
+              <div>Paid: <span>{totalPaid.toLocaleString()} R</span></div>
+              <div>Unpaid: <span style={{ color: '#dc2626' }}>{(totalPrice - totalPaid).toLocaleString()} R</span></div>
+            </div>
+            <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingOrder(null); }}>
+              + New Order
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="empty-state" style={{ animation: 'pulse 1.5s infinite' }}>Loading...</div>
+          ) : (
+            <OrderTable
+              orders={orders}
+              onPay={openPayModal}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onApproveDeletion={handleApproveDeletion}
+              onCancelDeletion={handleCancelDeletion}
+              isAdmin={isAdmin}
+            />
+          )}
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay" onClick={handleCancel}>
+          <div className="modal" style={{ maxWidth: '720px', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <OrderForm
               key={editingOrder?.id || 'new'}
               persons={persons}
@@ -337,28 +357,12 @@ export default function DailyOrders() {
               isEditing={!!editingOrder}
             />
           </div>
-        )}
-
-        {loading ? (
-          <div className="empty-state">Loading...</div>
-        ) : (
-          <OrderTable
-            orders={orders}
-            onPay={openPayModal}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onApprove={handleApprove}
-            onReject={handleReject}
-            onApproveDeletion={handleApproveDeletion}
-            onCancelDeletion={handleCancelDeletion}
-            isAdmin={isAdmin}
-          />
-        )}
-      </div>
+        </div>
+      )}
 
       {payModal.show && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="card" style={{ width: '90%', maxWidth: '400px', margin: 0 }}>
+        <div className="modal-overlay" onClick={() => setPayModal({ show: false, orderId: null, datetime: '', isCash: false, paymentMethod: '' })}>
+          <div className="card" style={{ width: '90%', maxWidth: '400px', margin: 0 }} onClick={(e) => e.stopPropagation()}>
             <h2 style={{ marginBottom: '1rem', fontSize: '1.1rem' }}>Confirm Payment</h2>
             <div className="form-group">
               <label>Payment Method</label>
@@ -457,6 +461,6 @@ export default function DailyOrders() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

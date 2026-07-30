@@ -92,10 +92,10 @@ export default function Dashboard() {
     return <circle cx={cx} cy={cy} r={isMax ? 5 : 3} fill={isMax ? '#dc2626' : color} />;
   };
 
-  if (loading) return <div className="empty-state">Loading...</div>;
+  if (loading) return <div className="empty-state" style={{ animation: 'pulse 1.5s infinite' }}>Loading...</div>;
 
   return (
-    <div>
+    <div className="animate-fade-in-up">
       <div className="page-header">
         <h1>Dashboard</h1>
         <div className="date-nav">
@@ -128,23 +128,23 @@ export default function Dashboard() {
       {data && (
         <>
           <div className="stats-grid">
-            <div className="stat-card">
+            <div className="stat-card animate-fade-in-up-d1">
               <div className="label">Total Orders</div>
               <div className="value blue">{data.summary.total_orders}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card animate-fade-in-up-d2">
               <div className="label">Unpaid Orders</div>
               <div className="value red">{data.summary.unpaid_orders}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card animate-fade-in-up-d3">
               <div className="label">Total Revenue</div>
               <div className="value">{formatRiel(data.summary.total_price)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card animate-fade-in-up-d4">
               <div className="label">Total Paid</div>
               <div className="value green">{formatRiel(data.summary.total_paid)}</div>
             </div>
-            <div className="stat-card">
+            <div className="stat-card animate-fade-in-up-d5">
               <div className="label">Unpaid Amount</div>
               <div className="value red">{formatRiel(data.summary.total_unpaid)}</div>
             </div>

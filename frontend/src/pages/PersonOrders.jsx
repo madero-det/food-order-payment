@@ -135,7 +135,7 @@ export default function PersonOrders() {
   const selectedPerson = isAdmin ? persons.find((p) => p.id === Number(selectedId)) : user;
 
   return (
-    <div>
+    <div className="animate-fade-in-up">
       <div className="page-header">
         <h1>{isAdmin ? 'Person Orders' : 'My Orders'}</h1>
       </div>
@@ -181,19 +181,19 @@ export default function PersonOrders() {
 
       {selectedId && summary && (
         <div className="stats-grid" style={{ marginTop: '1rem' }}>
-          <div className="stat-card">
+          <div className="stat-card animate-fade-in-up-d1">
             <div className="label">{selectedPerson?.name} - Total Orders</div>
             <div className="value blue">{summary.total_orders}</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card animate-fade-in-up-d2">
             <div className="label">Total Spent</div>
             <div className="value">{formatRiel(summary.total_spent)}</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card animate-fade-in-up-d3">
             <div className="label">Total Paid</div>
             <div className="value green">{formatRiel(summary.total_paid)}</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card animate-fade-in-up-d4">
             <div className="label">Total Unpaid</div>
             <div className="value red">{formatRiel(summary.total_unpaid)}</div>
           </div>

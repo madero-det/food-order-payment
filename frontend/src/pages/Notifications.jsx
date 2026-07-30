@@ -105,7 +105,7 @@ export default function Notifications({ onCountChange }) {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div>
+    <div className="animate-fade-in-up">
       <div className="page-header" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
         <h1>Notifications</h1>
         {unreadCount > 0 && (
