@@ -1155,9 +1155,12 @@ body.dark,
   z-index: 1;
 }
 
+.actions-dropdown:hover {
+  z-index: 3;
+}
+
 .actions-dropdown:hover .actions-dropdown-menu {
   display: flex;
-  z-index: 2;
 }
 
 .actions-dots {
