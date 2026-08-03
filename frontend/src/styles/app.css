@@ -1298,6 +1298,10 @@ body.dark,
   z-index: 1;
 }
 
+.person-card-menu:hover {
+  z-index: 3;
+}
+
 .person-card-menu:hover .actions-dropdown-menu {
   display: flex;
   z-index: 2;
