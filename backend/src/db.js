@@ -169,6 +169,13 @@ export const initDB = async () => {
       CREATE INDEX IF NOT EXISTS idx_orders_paid ON food_orders(paid_amount);
       CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
       CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, is_read);
+
+      -- Reset sequences after import to prevent duplicate key errors
+      SELECT setval('food_orders_id_seq', COALESCE((SELECT MAX(id) FROM food_orders), 1));
+      SELECT setval('persons_id_seq', COALESCE((SELECT MAX(id) FROM persons), 1));
+      SELECT setval('notifications_id_seq', COALESCE((SELECT MAX(id) FROM notifications), 1));
+      SELECT setval('menu_items_id_seq', COALESCE((SELECT MAX(id) FROM menu_items), 1));
+      SELECT setval('order_items_id_seq', COALESCE((SELECT MAX(id) FROM order_items), 1));
     `);
     console.log('Database tables initialized');
   } finally {
