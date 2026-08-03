@@ -693,8 +693,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .person-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.person-card:hover .person-card-inner {
+  transform: translateY(-2px);
+}
+
+.person-card-inner {
+  transition: transform 0.2s ease;
 }
 
 .dark .person-card:hover {

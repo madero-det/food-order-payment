@@ -208,6 +208,7 @@ export default function Persons({ user, onUserUpdate }) {
                       </div>
                     </div>
                   )}
+                  <div className="person-card-inner" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                   <div className="person-card-avatar">
                     <PersonAvatar
                       src={getImageUrl(p.profile_image)}
@@ -234,6 +235,7 @@ export default function Persons({ user, onUserUpdate }) {
                         <button type="button" onClick={(e) => { e.stopPropagation(); setPreviewSrc(getImageUrl(p.profile_image)); }} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}>Preview</button>
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               ))}
