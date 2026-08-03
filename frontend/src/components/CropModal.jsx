@@ -100,8 +100,8 @@ export default function CropModal({ imageSrc, onCrop, onCancel }) {
                   width: imgSize.w,
                   height: imgSize.h,
                   position: 'absolute',
-                  left: -pos.x,
-                  top: -pos.y,
+                  left: pos.x,
+                  top: pos.y,
                   pointerEvents: 'none',
                   userSelect: 'none',
                 }}
