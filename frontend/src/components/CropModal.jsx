@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function CropModal({ imageSrc, onCrop, onCancel }) {
   const canvasRef = useRef(null);
@@ -74,7 +75,7 @@ export default function CropModal({ imageSrc, onCrop, onCancel }) {
     }, 'image/jpeg', 0.92);
   };
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal crop-modal" onClick={(e) => e.stopPropagation()}>
         <h3>Crop Profile Picture</h3>
@@ -114,6 +115,7 @@ export default function CropModal({ imageSrc, onCrop, onCancel }) {
           <button className="btn btn-primary" onClick={handleCrop}>Upload</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
