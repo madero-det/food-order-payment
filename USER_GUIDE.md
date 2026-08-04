@@ -230,7 +230,6 @@ Download the APK (Android) or IPA (iOS) from the project repository. Or install 
 - Push notifications via browser/webview
 - Optimized for touch: card layout on small screens, hamburger menu
 - Safe area insets for notched devices
-- Safe area insets for notched devices
 
 ### Network
 The mobile app connects to the same backend server. Ensure your device has internet access.
