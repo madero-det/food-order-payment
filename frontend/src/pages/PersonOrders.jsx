@@ -113,6 +113,15 @@ export default function PersonOrders() {
 
   const formatRiel = (amount) => amount != null ? `${Number(amount).toLocaleString()} R` : '-';
 
+  function sortItems(items) {
+    if (!items || !items.length) return items;
+    return [...items].sort((a, b) => {
+      if (a.is_rice && !b.is_rice) return 1;
+      if (!a.is_rice && b.is_rice) return -1;
+      return 0;
+    });
+  }
+
   const formatDisplayDate = (dt) => {
     if (!dt) return '-';
     const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -211,25 +220,31 @@ export default function PersonOrders() {
           <div className="table-scroll">
           <table>
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Price</th>
-                <th className="hide-mobile">Paid</th>
-                <th className="hide-mobile">Transaction Date</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order, idx) => (
-                <tr
-                  key={order.id}
-                  onClick={() => order.paid_amount == null && navigate(`/orders?date=${order.order_date}`)}
-                  style={order.paid_amount == null ? { cursor: 'pointer' } : undefined}
-                >
-                  <td>{idx + 1}</td>
-                  <td>{formatDisplayDate(order.order_date)}</td>
-                  <td>{formatRiel(order.price)}</td>
+               <tr>
+                 <th>#</th>
+                 <th>Date</th>
+                 <th>Items</th>
+                 <th>Price</th>
+                 <th className="hide-mobile">Paid</th>
+                 <th className="hide-mobile">Transaction Date</th>
+                 <th>Status</th>
+               </tr>
+             </thead>
+             <tbody>
+               {orders.map((order, idx) => (
+                 <tr
+                   key={order.id}
+                   onClick={() => order.paid_amount == null && navigate(`/orders?date=${order.order_date}`)}
+                   style={order.paid_amount == null ? { cursor: 'pointer' } : undefined}
+                 >
+                   <td>{idx + 1}</td>
+                   <td>{formatDisplayDate(order.order_date)}</td>
+                   <td style={{ color: '#2563eb' }}>
+                     {order.items && order.items.length > 0
+                       ? sortItems(order.items).map(i => i.name).join(', ')
+                       : '-'}
+                   </td>
+                   <td>{formatRiel(order.price)}</td>
                   <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
                   <td className="hide-mobile">
                     {order.transaction_date
@@ -279,6 +294,14 @@ export default function PersonOrders() {
                   )}
                 </div>
                 <div className="order-card-body">
+                  <div className="order-card-row" style={{ color: '#2563eb', fontSize: '0.85rem' }}>
+                    <span className="label">Items</span>
+                    <span className="value">
+                      {order.items && order.items.length > 0
+                        ? sortItems(order.items).map(i => i.name).join(', ')
+                        : '-'}
+                    </span>
+                  </div>
                   <div className="order-card-row">
                     <span className="label">Price</span>
                     <span className="value">{formatRiel(order.price)}</span>

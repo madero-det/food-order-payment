@@ -73,10 +73,10 @@ router.get('/', async (req, res, next) => {
       SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.transaction_date, fo.payment_status, fo.deletion_status,
              fo.notes, fo.payment_method,
              p.id as person_id, p.name as person_name, p.profile_image as person_avatar,
-             COALESCE(json_agg(json_build_object(
-               'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
-               'name', mi.name, 'type', mi.type
-             ) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) as items
+              COALESCE(json_agg(json_build_object(
+                'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
+                'name', mi.name, 'type', mi.type, 'is_rice', mi.is_rice
+              ) ORDER BY oi.id) FILTER (WHERE oi.id IS NOT NULL), '[]'::json) as items
       FROM food_orders fo
       JOIN persons p ON fo.person_id = p.id
       LEFT JOIN order_items oi ON fo.id = oi.order_id
