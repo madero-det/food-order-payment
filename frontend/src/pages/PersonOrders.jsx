@@ -239,10 +239,15 @@ export default function PersonOrders() {
                  >
                    <td>{idx + 1}</td>
                    <td>{formatDisplayDate(order.order_date)}</td>
-                   <td style={{ color: '#2563eb' }}>
-                     {order.items && order.items.length > 0
-                       ? sortItems(order.items).map(i => i.name).join(', ')
-                       : '-'}
+                   <td style={{ fontSize: '0.85rem' }}>
+                     {order.items && order.items.length > 0 ? (
+                       <span>
+                         <span style={{ color: '#2563eb' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
+                         {order.notes && <span style={{ color: '#d97706' }}> ({order.notes})</span>}
+                       </span>
+                     ) : order.notes ? (
+                       <span style={{ color: '#d97706' }}>({order.notes})</span>
+                     ) : '-'}
                    </td>
                    <td>{formatRiel(order.price)}</td>
                   <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
@@ -294,12 +299,17 @@ export default function PersonOrders() {
                   )}
                 </div>
                 <div className="order-card-body">
-                  <div className="order-card-row" style={{ color: '#2563eb', fontSize: '0.85rem' }}>
+                  <div className="order-card-row" style={{ fontSize: '0.85rem' }}>
                     <span className="label">Items</span>
                     <span className="value">
-                      {order.items && order.items.length > 0
-                        ? sortItems(order.items).map(i => i.name).join(', ')
-                        : '-'}
+                      {order.items && order.items.length > 0 ? (
+                        <span>
+                          <span style={{ color: '#2563eb' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
+                          {order.notes && <span style={{ color: '#d97706' }}> ({order.notes})</span>}
+                        </span>
+                      ) : order.notes ? (
+                        <span style={{ color: '#d97706' }}>({order.notes})</span>
+                      ) : '-'}
                     </span>
                   </div>
                   <div className="order-card-row">
