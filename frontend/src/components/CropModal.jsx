@@ -37,20 +37,21 @@ export default function CropModal({ imageSrc, onCrop, onCancel }) {
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     setDragging(true);
-    setOffset({ x: clientX - rect.left - pos.x, y: clientY - rect.top - pos.y });
-  }, [pos]);
+    setOffset({ x: clientX, y: clientY });
+  }, []);
 
   const handleMouseMove = useCallback((e) => {
     if (!dragging) return;
     e.preventDefault();
-    const rect = e.currentTarget.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    let x = clientX - rect.left - offset.x;
-    let y = clientY - rect.top - offset.y;
-    x = Math.max(0, Math.min(x, imgSize.w - cropSize));
-    y = Math.max(0, Math.min(y, imgSize.h - cropSize));
-    setPos({ x, y });
+    const dx = clientX - offset.x;
+    const dy = clientY - offset.y;
+    setPos(p => ({
+      x: Math.max(0, Math.min(p.x + dx, imgSize.w - cropSize)),
+      y: Math.max(0, Math.min(p.y + dy, imgSize.h - cropSize)),
+    }));
+    setOffset({ x: clientX, y: clientY });
   }, [dragging, offset, imgSize, cropSize]);
 
   const handleMouseUp = useCallback(() => setDragging(false), []);
