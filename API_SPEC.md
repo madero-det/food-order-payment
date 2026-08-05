@@ -118,6 +118,34 @@ Authenticate and receive a JWT token.
 
 ---
 
+### POST /api/auth/register
+
+Admin only. Set password for an existing person.
+
+**Request:**
+```json
+{
+  "name": "NewUser",
+  "password": "new123",
+  "role": "user"
+}
+```
+
+**Response 200:**
+```json
+{
+  "message": "Password set successfully",
+  "user": { "id": 25, "name": "NewUser", "role": "user" }
+}
+```
+
+**Response 404:**
+```json
+{ "error": "Person not found" }
+```
+
+---
+
 ### POST /api/auth/change-password
 
 Change own password. Requires authentication.
@@ -195,9 +223,14 @@ List orders with optional filters and pagination.
       "transaction_date": "2026-07-25 10:30:00",
       "payment_status": "approved",
       "deletion_status": null,
+      "notes": null,
+      "payment_method": "bank",
       "person_id": 20,
       "person_name": "Madero",
-      "person_avatar": null
+      "person_avatar": null,
+      "items": [
+        { "id": 12, "menu_item_id": 3, "quantity": 2, "price": 4000, "name": "Fried Rice", "type": "food" }
+      ]
     }
   ],
   "total": 50,
@@ -229,9 +262,14 @@ Get a single order by ID.
   "transaction_date": "2026-07-25 10:30:00",
   "payment_status": "approved",
   "deletion_status": null,
+  "notes": null,
+  "payment_method": "bank",
   "person_id": 20,
   "person_name": "Madero",
-  "person_avatar": null
+  "person_avatar": null,
+  "items": [
+    { "id": 12, "menu_item_id": 3, "quantity": 2, "price": 4000, "name": "Fried Rice", "type": "food", "is_rice": false }
+  ]
 }
 ```
 
@@ -241,7 +279,22 @@ Get a single order by ID.
 
 Create a new order.
 
-**Request:**
+**Request (with items):**
+```json
+{
+  "order_date": "2026-07-25",
+  "person_id": 20,
+  "notes": "no chili",
+  "payment_method": "bank",
+  "transaction_date": "2026-07-25T10:30",
+  "paid_amount": 8000,
+  "items": [
+    { "menu_item_id": 3, "quantity": 2, "price": 4000 }
+  ]
+}
+```
+
+**Request (flat price, legacy):**
 ```json
 {
   "order_date": "2026-07-25",
@@ -255,10 +308,15 @@ Create a new order.
 | Field | Required | Notes |
 |-------|----------|-------|
 | `order_date` | Yes | `YYYY-MM-DD` format |
-| `price` | Yes | Integer, in Cambodian Riel |
+| `price` | Yes* | Integer, in Cambodian Riel (legacy mode) |
+| `items` | Yes* | Array of `{ menu_item_id, quantity, price }`. Total calculated from `SUM(price × quantity)` |
 | `person_id` | Admin only | Non-admin auto-assigned to self |
 | `paid_amount` | No | Sets payment if provided |
 | `transaction_date` | No | ISO datetime string or `YYYY-MM-DDTHH:MM` |
+| `notes` | No | Order notes |
+| `payment_method` | No | `"cash"` or `"bank"` |
+
+*\* either `price` or `items` must be provided*
 
 **Response 201:**
 ```json
@@ -270,9 +328,14 @@ Create a new order.
   "transaction_date": "2026-07-25 10:30:00",
   "payment_status": null,
   "deletion_status": null,
+  "notes": "no chili",
+  "payment_method": "bank",
   "person_id": 20,
   "person_name": "Madero",
-  "person_avatar": "https://res.cloudinary.com/..."
+  "person_avatar": "https://res.cloudinary.com/...",
+  "items": [
+    { "id": 12, "menu_item_id": 3, "quantity": 2, "price": 4000, "name": "Fried Rice", "type": "food" }
+  ]
 }
 ```
 
@@ -289,6 +352,7 @@ Update an order.
 **Notes:**
 - Non-admin users can only update their own orders
 - Non-admin setting `paid_amount` triggers `payment_status = 'pending'` and sends Telegram + admin notification
+- Admin can update all fields including `items` (replaces all items and recalculates total price)
 
 **SSE Event:** `order_updated` or `payment_submitted`
 
@@ -333,7 +397,8 @@ Submit payment for an order.
 ```json
 {
   "paid_amount": 8000,
-  "transaction_date": "2026-07-25T10:30"
+  "transaction_date": "2026-07-25T10:30",
+  "payment_method": "bank"
 }
 ```
 
@@ -341,6 +406,7 @@ Submit payment for an order.
 - **User pays:** `payment_status = 'pending'`, Telegram notification sent, admin gets notification
 - **Admin pays:** `payment_status = 'approved'`, user gets notification, admin gets "Payment Updated" notification
 - `paid_amount` defaults to the order's price
+- `payment_method` optional: `"cash"` or `"bank"`
 
 **Response 200:**
 ```json
@@ -444,7 +510,9 @@ List all persons.
     "id": 20,
     "name": "Madero",
     "role": "admin",
-    "profile_image": "https://res.cloudinary.com/..."
+    "profile_image": "https://res.cloudinary.com/...",
+    "default_price": 8000,
+    "created_at": "2026-07-25T00:00:00.000Z"
   }
 ]
 ```
@@ -470,7 +538,8 @@ Admin only. Create a new person.
   "id": 25,
   "name": "NewPerson",
   "role": "user",
-  "profile_image": null
+  "profile_image": null,
+  "default_price": null
 }
 ```
 
@@ -519,6 +588,73 @@ Upload a profile image. Uploaded to Cloudinary in production.
   "role": "admin",
   "profile_image": "https://res.cloudinary.com/mfgsequ3/image/upload/v1234/food-order-avatars/avatar-20-1234567890.jpg"
 }
+```
+
+---
+
+## Menu Items Endpoints
+
+### GET /api/menu
+
+List all menu items.
+
+**Response 200:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Fried Rice",
+    "price": 4000,
+    "type": "food",
+    "is_rice": false,
+    "is_available": true
+  }
+]
+```
+
+### POST /api/menu
+
+Admin only. Create a menu item.
+
+**Request:**
+```json
+{
+  "name": "Fried Rice",
+  "price": 4000,
+  "type": "food",
+  "is_rice": false,
+  "is_available": true
+}
+```
+
+| Field | Required | Default | Notes |
+|-------|----------|---------|-------|
+| `name` | Yes | — | Unique |
+| `price` | Yes | — | Integer, Cambodian Riel |
+| `type` | No | `"food"` | `"food"` or `"dessert"` |
+| `is_rice` | No | `false` | Marks as rice side-item |
+| `is_available` | No | `true` | Whether item appears in order form |
+
+**Response 201:** Created item object  
+**Response 409:** `{ "error": "Item already exists" }`
+
+### PUT /api/menu/:id
+
+Admin only. Update a menu item.
+
+**Request:** Same fields as POST (all optional except name, price).
+
+**Response 200:** Updated item object  
+**Response 404:** `{ "error": "Item not found" }`  
+**Response 409:** `{ "error": "Name already exists" }`
+
+### DELETE /api/menu/:id
+
+Admin only. Delete a menu item.
+
+**Response 200:**
+```json
+{ "message": "Item deleted", "id": 1 }
 ```
 
 ---
