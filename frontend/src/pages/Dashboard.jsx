@@ -16,10 +16,10 @@ function formatK(amount) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '0.5rem 0.75rem', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      <div style={{ fontWeight: 600, marginBottom: 4, fontSize: '0.85rem' }}>{label}</div>
+    <div className="chart-tooltip">
+      <div className="tooltip-label">{label}</div>
       {payload.map((p, i) => (
-        <div key={i} style={{ fontSize: '0.8rem', color: p.color }}>
+        <div key={i} className="tooltip-item" style={{ color: p.color }}>
           {p.name}: {Number(p.value).toLocaleString()} R
         </div>
       ))}
