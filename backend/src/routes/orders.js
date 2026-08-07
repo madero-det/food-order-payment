@@ -188,13 +188,15 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid transaction_date' });
     }
 
+    const payment_status = !isAdmin && paid_amount ? 'pending' : null;
+
     await client.query('BEGIN');
 
     const result = await client.query(
-      `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, menu_item_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, payment_status, menu_item_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, null]
+      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, payment_status, null]
     );
     const order = result.rows[0];
 
