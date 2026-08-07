@@ -197,6 +197,10 @@ router.post('/', async (req, res, next) => {
         client.release();
         return res.status(400).json({ error: 'Transaction date is required when paying' });
       }
+      if (Number(paid_amount) !== totalPrice) {
+        client.release();
+        return res.status(400).json({ error: 'Paid amount must match the total price' });
+      }
     }
 
     const payment_status = !isAdmin && paid_amount ? 'pending' : null;
@@ -268,6 +272,7 @@ router.put('/:id', async (req, res, next) => {
       if (hasNewPayment) {
         if (!payment_method) return res.status(400).json({ error: 'Payment method is required when paying' });
         if (payment_method !== 'cash' && !transaction_date) return res.status(400).json({ error: 'Transaction date is required when paying' });
+        if (Number(paid_amount) !== Number(check.rows[0].price)) return res.status(400).json({ error: 'Paid amount must match the order price' });
       }
       const paymentStatus = hasNewPayment ? 'pending' : null;
 
