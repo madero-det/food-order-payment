@@ -9,7 +9,12 @@ function timeAgo(dateStr) {
   if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const h = then.getHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  const mm = String(then.getMinutes()).padStart(2, '0');
+  return `${months[then.getMonth()]} ${then.getDate()}, ${then.getFullYear()} ${h12}:${mm} ${ampm}`;
 }
 
 function notifIcon(type) {
