@@ -1328,20 +1328,19 @@ body.dark,
   position: relative;
 }
 
-.person-card-menu {
+.person-card-menu,
+.person-card-menu.actions-dropdown {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
   z-index: 1;
 }
 
-.person-card-menu:hover {
-  z-index: 3;
-}
-
-.person-card-menu:hover .actions-dropdown-menu {
-  display: flex;
-  z-index: 2;
+.person-card-menu:hover,
+.person-card-menu.actions-dropdown:hover,
+.person-card-menu.actions-dropdown:focus-within,
+.person-card-menu.actions-dropdown.is-open {
+  z-index: 200;
 }
 
 .person-card-avatar {
