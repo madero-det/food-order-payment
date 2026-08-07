@@ -291,11 +291,11 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
             type="datetime-local"
             value={formData.transaction_date}
             onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-            disabled={isAdmin && formData.payment_method === 'cash'}
-            className={isAdmin && formData.payment_method === 'cash' ? 'input-disabled' : ''}
+            disabled={formData.payment_method === 'cash'}
+            className={formData.payment_method === 'cash' ? 'input-disabled' : ''}
             style={{ width: '100%' }}
           />
-          {isAdmin && formData.payment_method === 'cash' && (
+          {formData.payment_method === 'cash' && (
             <div style={{ fontSize: '0.72rem', color: '#6b7280', marginTop: '0.2rem' }}>Disabled for cash payments</div>
           )}
         </div>

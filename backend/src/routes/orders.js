@@ -193,7 +193,7 @@ router.post('/', async (req, res, next) => {
         client.release();
         return res.status(400).json({ error: 'Payment method is required when paying' });
       }
-      if (!transaction_date) {
+      if (payment_method !== 'cash' && !transaction_date) {
         client.release();
         return res.status(400).json({ error: 'Transaction date is required when paying' });
       }
@@ -267,7 +267,7 @@ router.put('/:id', async (req, res, next) => {
       const hasNewPayment = paid_amount != null && check.rows[0].old_paid == null;
       if (hasNewPayment) {
         if (!payment_method) return res.status(400).json({ error: 'Payment method is required when paying' });
-        if (!transaction_date) return res.status(400).json({ error: 'Transaction date is required when paying' });
+        if (payment_method !== 'cash' && !transaction_date) return res.status(400).json({ error: 'Transaction date is required when paying' });
       }
       const paymentStatus = hasNewPayment ? 'pending' : null;
 
