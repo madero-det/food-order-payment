@@ -1140,6 +1140,9 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   }
 
   .mobile-cards .order-card {
+    position: relative;
+    z-index: 1;
+    overflow: visible;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
@@ -1147,6 +1150,11 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .mobile-cards .order-card:hover,
+  .mobile-cards .order-card:focus-within {
+    z-index: 100;
   }
 
   .mobile-cards .order-card-header {
@@ -1189,9 +1197,26 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
   .mobile-cards .order-card-actions {
     display: flex;
+    justify-content: flex-end;
+    align-items: center;
     gap: 0.375rem;
-    padding-top: 0.375rem;
+    padding-top: 0.5rem;
     border-top: 1px solid #e5e7eb;
+    overflow: visible;
+  }
+
+  .mobile-cards .actions-dropdown {
+    margin-left: auto;
+    overflow: visible;
+  }
+
+  .mobile-cards .actions-dropdown-menu {
+    right: 0;
+    left: auto;
+    bottom: 100%;
+    top: auto;
+    margin-bottom: 0.25rem;
+    z-index: 200;
   }
 
   .table-wrapper {
@@ -1370,11 +1395,13 @@ body.dark,
   z-index: 1;
 }
 
-.actions-dropdown:hover {
-  z-index: 100;
+.actions-dropdown:hover,
+.actions-dropdown:focus-within {
+  z-index: 200;
 }
 
-.actions-dropdown:hover .actions-dropdown-menu {
+.actions-dropdown:hover .actions-dropdown-menu,
+.actions-dropdown:focus-within .actions-dropdown-menu {
   display: flex;
 }
 
