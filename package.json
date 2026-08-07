@@ -1,0 +1,14 @@
+{
+  "name": "food-order-payment",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "npx --yes concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\""
+  }
+}

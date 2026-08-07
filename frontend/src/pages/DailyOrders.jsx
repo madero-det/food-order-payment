@@ -143,7 +143,7 @@ export default function DailyOrders() {
         }]);
       }
     } catch (err) {
-      alert(err.message);
+      throw err;
     }
   };
 
@@ -166,7 +166,7 @@ export default function DailyOrders() {
           items: result.items !== undefined ? result.items : o.items,
         } : o));
     } catch (err) {
-      alert(err.message);
+      throw err;
     }
   };
 

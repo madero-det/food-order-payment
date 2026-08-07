@@ -69,6 +69,7 @@ export default function Persons({ user, onUserUpdate }) {
   const [pwdSuccess, setPwdSuccess] = useState('');
   const [previewSrc, setPreviewSrc] = useState(null);
   const [pwdLoading, setPwdLoading] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ show: false, person: null });
 
   const fetchPersons = async () => {
     setLoading(true);
@@ -116,10 +117,15 @@ export default function Persons({ user, onUserUpdate }) {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this person? Their orders will also be deleted.')) return;
+  const handleDelete = (person) => {
+    setDeleteModal({ show: true, person });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.person) return;
     try {
-      await api.deletePerson(id);
+      await api.deletePerson(deleteModal.person.id);
+      setDeleteModal({ show: false, person: null });
       fetchPersons();
     } catch (err) {
       alert(err.message);
@@ -201,7 +207,7 @@ export default function Persons({ user, onUserUpdate }) {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                           <span>Reset Password</span>
                         </button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(p.id)} style={{ color: '#dc2626' }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(p)} style={{ color: '#dc2626' }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                           <span>Delete</span>
                         </button>
@@ -275,7 +281,7 @@ export default function Persons({ user, onUserUpdate }) {
                       <button className="btn btn-ghost btn-sm" title="Reset Password" onClick={() => { setResetModal(p); setNewPwd(''); setConfirmPwd(''); setPwdError(''); setPwdSuccess(''); }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                       </button>
-                      <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => handleDelete(p.id)}>
+                      <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => handleDelete(p)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                       </button>
                     </div>
@@ -331,6 +337,20 @@ export default function Persons({ user, onUserUpdate }) {
             <img src={previewSrc} alt="Preview" style={{ width: '100%', borderRadius: '8px' }} />
             <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
               <button className="btn btn-ghost btn-sm" onClick={() => setPreviewSrc(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {deleteModal.show && (
+        <div className="modal-overlay" onClick={() => setDeleteModal({ show: false, person: null })}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <h3 style={{ margin: '0 0 0.5rem 0' }}>Delete Person</h3>
+            <p style={{ margin: '0.5rem 0 1.25rem 0', color: '#64748b' }}>
+              Are you sure you want to delete <strong>{deleteModal.person?.name}</strong>? Their orders will also be deleted.
+            </p>
+            <div className="form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button className="btn btn-ghost" onClick={() => setDeleteModal({ show: false, person: null })}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
             </div>
           </div>
         </div>

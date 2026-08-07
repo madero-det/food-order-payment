@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 
 export default function OrderForm({ persons, menuItems = [], onSubmit, initialData = {}, onCancel, isAdmin = true, isEditing = false }) {
   const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const submitLockRef = useRef(false);
   const toDateInput = (val) => {
     if (!val) return '';
@@ -69,11 +70,12 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     setSelectedItems(prev => prev.map(i => i.id === uid ? { ...i, quantity: Math.max(1, qty) } : i));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (submitLockRef.current) return;
     submitLockRef.current = true;
     setSubmitting(true);
+    setErrorMsg('');
     const data = {
       ...formData,
       price: totalPrice || Number(formData.price),
@@ -84,7 +86,14 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
       payment_method: formData.payment_method || null,
       items: selectedItems.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity, price: i.price })),
     };
-    onSubmit(data);
+    try {
+      await onSubmit(data);
+    } catch (err) {
+      setErrorMsg(err.message || 'An error occurred while saving the order.');
+    } finally {
+      submitLockRef.current = false;
+      setSubmitting(false);
+    }
   };
 
   const todayStr = (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`; })();
@@ -105,6 +114,12 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   return (
     <form onSubmit={handleSubmit}>
+      {errorMsg && (
+        <div className="alert alert-error" style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.8rem', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: '0.85rem' }}>
+          <span>{errorMsg}</span>
+          <button type="button" onClick={() => setErrorMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 'bold', marginLeft: '0.5rem' }}>✕</button>
+        </div>
+      )}
       {isAdmin ? (
         <div className="form-row">
           <div className="form-group">

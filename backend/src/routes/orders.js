@@ -245,6 +245,32 @@ router.post('/', async (req, res, next) => {
       triggeredBy: req.user.id,
     });
 
+    if (!isAdmin && paid_amount) {
+      sendPaymentNotification({
+        personName,
+        price: order.price,
+        paidAmount: order.paid_amount,
+        orderDate: order.order_date,
+        transactionDate: order.transaction_date,
+        orderId: order.id,
+        paymentStatus: 'pending',
+      }).then(async (tgResult) => {
+        if (tgResult) {
+          await pool.query(
+            `UPDATE food_orders SET telegram_chat_id = $1, telegram_message_id = $2 WHERE id = $3`,
+            [tgResult.chatId, tgResult.messageId, order.id]
+          );
+        }
+      }).catch(() => {});
+
+      broadcast('payment_submitted', {
+        ...order,
+        person_name: personName,
+        person_avatar: personAvatar,
+        triggeredBy: req.user.id,
+      });
+    }
+
     res.status(201).json({ ...order, person_name: personName, person_avatar: personAvatar, items: orderItems.rows });
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch (_) {}
@@ -268,13 +294,13 @@ router.put('/:id', async (req, res, next) => {
         return res.status(400).json({ error: 'Invalid transaction_date' });
       }
 
-      const hasNewPayment = paid_amount != null && check.rows[0].old_paid == null;
-      if (hasNewPayment) {
+      const hasPaymentSubmitted = paid_amount != null;
+      if (hasPaymentSubmitted) {
         if (!payment_method) return res.status(400).json({ error: 'Payment method is required when paying' });
         if (payment_method !== 'cash' && !transaction_date) return res.status(400).json({ error: 'Transaction date is required when paying' });
         if (Number(paid_amount) !== Number(check.rows[0].price)) return res.status(400).json({ error: 'Paid amount must match the order price' });
       }
-      const paymentStatus = hasNewPayment ? 'pending' : null;
+      const paymentStatus = hasPaymentSubmitted ? 'pending' : null;
 
       const result = await pool.query(
         `UPDATE food_orders
@@ -291,11 +317,13 @@ router.put('/:id', async (req, res, next) => {
         return res.status(404).json({ error: 'Order not found' });
       }
       const order = result.rows[0];
-      const personResult = await pool.query('SELECT name FROM persons WHERE id = $1', [order.person_id]);
+      const personResult = await pool.query('SELECT name, profile_image FROM persons WHERE id = $1', [order.person_id]);
+      const personName = personResult.rows[0]?.name || 'User';
+      const personAvatar = personResult.rows[0]?.profile_image || null;
 
-      if (hasNewPayment) {
+      if (hasPaymentSubmitted) {
         sendPaymentNotification({
-          personName: personResult.rows[0].name,
+          personName,
           price: order.price,
           paidAmount: order.paid_amount,
           orderDate: order.order_date,
@@ -313,13 +341,15 @@ router.put('/:id', async (req, res, next) => {
 
         broadcast('payment_submitted', {
           ...order,
-          person_name: personResult.rows[0].name,
+          person_name: personName,
+          person_avatar: personAvatar,
           triggeredBy: req.user.id,
         });
       } else {
         broadcast('order_updated', {
           ...order,
-          person_name: personResult.rows[0].name,
+          person_name: personName,
+          person_avatar: personAvatar,
           triggeredBy: req.user.id,
         });
       }
@@ -330,7 +360,7 @@ router.put('/:id', async (req, res, next) => {
          WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
       );
 
-      return res.json({ ...order, person_name: personResult.rows[0].name, items: orderItems.rows });
+      return res.json({ ...order, person_name: personName, person_avatar: personAvatar, items: orderItems.rows });
     }
 
     if (!isValidDate(order_date)) {
