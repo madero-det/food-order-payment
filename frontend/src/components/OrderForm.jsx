@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function OrderForm({ persons, menuItems = [], onSubmit, initialData = {}, onCancel, isAdmin = true, isEditing = false }) {
+  const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
   const toDateInput = (val) => {
     if (!val) return '';
     const m = String(val).match(/^(\d{4}-\d{2}-\d{2})/);
@@ -69,6 +71,9 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    setSubmitting(true);
     const data = {
       ...formData,
       price: totalPrice || Number(formData.price),
@@ -296,7 +301,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
         </div>
       </div>
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-        <button type="submit" className="btn btn-primary">Save</button>
+        <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save'}</button>
         {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>}
       </div>
     </form>
