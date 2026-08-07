@@ -188,6 +188,17 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid transaction_date' });
     }
 
+    if (!isAdmin && paid_amount) {
+      if (!payment_method) {
+        client.release();
+        return res.status(400).json({ error: 'Payment method is required when paying' });
+      }
+      if (!transaction_date) {
+        client.release();
+        return res.status(400).json({ error: 'Transaction date is required when paying' });
+      }
+    }
+
     const payment_status = !isAdmin && paid_amount ? 'pending' : null;
 
     await client.query('BEGIN');
@@ -254,6 +265,10 @@ router.put('/:id', async (req, res, next) => {
       }
 
       const hasNewPayment = paid_amount != null && check.rows[0].old_paid == null;
+      if (hasNewPayment) {
+        if (!payment_method) return res.status(400).json({ error: 'Payment method is required when paying' });
+        if (!transaction_date) return res.status(400).json({ error: 'Transaction date is required when paying' });
+      }
       const paymentStatus = hasNewPayment ? 'pending' : null;
 
       const result = await pool.query(
@@ -261,10 +276,11 @@ router.put('/:id', async (req, res, next) => {
          SET paid_amount = $1,
              transaction_date = $2,
              payment_status = COALESCE($4, payment_status),
+             payment_method = COALESCE($5, payment_method),
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $3
          RETURNING *`,
-        [paid_amount || null, transaction_date || null, id, paymentStatus]
+        [paid_amount || null, transaction_date || null, id, paymentStatus, payment_method || null]
       );
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Order not found' });
