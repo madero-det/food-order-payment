@@ -1,4 +1,5 @@
 import { getImageUrl } from '../api/client';
+import ActionDropdown from './ActionDropdown';
 
 function getInitials(name) {
   return name ? name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
@@ -55,7 +56,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
   );
 
   const renderActions = (order) => (
-    <div className="actions-dropdown">
+    <ActionDropdown>
       <button className="btn btn-ghost btn-sm actions-dots" title="Actions">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
       </button>
@@ -107,7 +108,7 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
           </button>
         )}
       </div>
-    </div>
+    </ActionDropdown>
   );
 
   return (

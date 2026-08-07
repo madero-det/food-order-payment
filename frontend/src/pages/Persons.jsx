@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, getImageUrl } from '../api/client';
 import PersonForm from '../components/PersonForm';
 import CropModal from '../components/CropModal';
+import ActionDropdown from '../components/ActionDropdown';
 
 function getInitials(name) {
   return name ? name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : '?';
@@ -194,7 +195,7 @@ export default function Persons({ user, onUserUpdate }) {
               {persons.map((p) => (
                 <div className="person-card card" key={p.id}>
                   {isAdmin && (
-                    <div className="person-card-menu">
+                    <ActionDropdown className="person-card-menu">
                       <button className="btn btn-ghost btn-sm actions-dots" title="Actions">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                       </button>
@@ -212,7 +213,7 @@ export default function Persons({ user, onUserUpdate }) {
                           <span>Delete</span>
                         </button>
                       </div>
-                    </div>
+                    </ActionDropdown>
                   )}
                   <div className="person-card-inner" style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
                   <div className="person-card-avatar">

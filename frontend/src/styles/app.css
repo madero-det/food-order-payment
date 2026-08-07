@@ -1213,9 +1213,6 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   .mobile-cards .actions-dropdown-menu {
     right: 0;
     left: auto;
-    top: 100%;
-    bottom: auto;
-    margin-top: 0.25rem;
     z-index: 200;
   }
 
@@ -1396,12 +1393,14 @@ body.dark,
 }
 
 .actions-dropdown:hover,
-.actions-dropdown:focus-within {
+.actions-dropdown:focus-within,
+.actions-dropdown.is-open {
   z-index: 200;
 }
 
 .actions-dropdown:hover .actions-dropdown-menu,
-.actions-dropdown:focus-within .actions-dropdown-menu {
+.actions-dropdown:focus-within .actions-dropdown-menu,
+.actions-dropdown.is-open .actions-dropdown-menu {
   display: flex;
 }
 
@@ -1432,7 +1431,7 @@ td .actions-dropdown {
   position: absolute;
   right: 0;
   top: 100%;
-  z-index: 100;
+  z-index: 200;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -1441,8 +1440,21 @@ td .actions-dropdown {
   min-width: 160px;
   max-height: 260px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-direction: column;
   gap: 0.125rem;
+}
+
+.actions-dropdown.drop-down .actions-dropdown-menu {
+  top: 100%;
+  bottom: auto;
+  margin: 0;
+}
+
+.actions-dropdown.drop-up .actions-dropdown-menu {
+  bottom: 100%;
+  top: auto;
+  margin: 0;
 }
 
 .actions-dropdown-menu .actions-dropdown-left {
