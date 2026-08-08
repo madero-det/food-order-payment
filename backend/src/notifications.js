@@ -1,4 +1,9 @@
 import pool from './db.js';
+import { deleteCacheKey, getUnreadKey } from './cache.js';
+
+function invalidateUnread(userId) {
+  deleteCacheKey(getUnreadKey(userId));
+}
 
 function fmtDate(d) {
   if (!d) return '-';
@@ -73,6 +78,7 @@ export const saveNotification = async (event, data) => {
         `INSERT INTO notifications (user_id, type, title, message, order_id) VALUES ($1, $2, $3, $4, $5)`,
         [notif.user_id, notif.type, notif.title, notif.message, notif.order_id || null]
       );
+      invalidateUnread(notif.user_id);
     } catch (err) {
       console.error('Failed to save notification:', err.message);
     }
@@ -89,6 +95,7 @@ export const saveNotification = async (event, data) => {
           `INSERT INTO notifications (user_id, type, title, message, order_id) VALUES ($1, $2, $3, $4, $5)`,
           [admin.id, adminNotif.type, adminNotif.title, adminNotif.message, adminNotif.order_id || null]
         );
+        invalidateUnread(admin.id);
       }
     } catch (err) {
       console.error('Failed to save admin notification:', err.message);
@@ -106,6 +113,7 @@ export const saveAdminPaymentNotification = async (data, personName) => {
          `The payment for ${Number(data.price).toLocaleString()} R has been updated!\nName: ${personName}\nOrder: ${fmtDate(data.order_date)}\nTxn: ${fmtDateTime(data.transaction_date)}`,
          data.id || null]
       );
+      invalidateUnread(admin.id);
     }
   } catch (err) {
     console.error('Failed to save admin payment notification:', err.message);

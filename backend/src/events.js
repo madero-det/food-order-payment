@@ -1,4 +1,7 @@
 import { saveNotification } from './notifications.js';
+import { clearByPrefix } from './cache.js';
+
+const DASHBOARD_EVENTS = ['order_created', 'order_updated', 'order_deleted', 'payment_approved', 'payment_rejected', 'deletion_approved'];
 
 const clients = new Map();
 let nextId = 1;
@@ -17,6 +20,11 @@ export const removeClient = (connId) => {
 
 export const broadcast = (event, data) => {
   saveNotification(event, data).catch(() => {});
+
+  if (DASHBOARD_EVENTS.includes(event)) {
+    clearByPrefix('dashboard:');
+    clearByPrefix('monthly:');
+  }
 
   const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   

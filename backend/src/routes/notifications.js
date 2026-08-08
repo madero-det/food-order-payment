@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import { getUnreadKey, getOrSet, deleteCacheKey } from '../cache.js';
 
 const router = Router();
 
@@ -23,11 +24,14 @@ router.get('/', async (req, res, next) => {
 
 router.get('/unread-count', async (req, res, next) => {
   try {
-    const result = await pool.query(
-      `SELECT COUNT(*)::int as count FROM notifications WHERE user_id = $1 AND is_read = false`,
-      [req.user.id]
+    const key = getUnreadKey(req.user.id);
+    const data = await getOrSet(key, 15, () =>
+      pool.query(
+        `SELECT COUNT(*)::int as count FROM notifications WHERE user_id = $1 AND is_read = false`,
+        [req.user.id]
+      ).then(r => r.rows[0].count)
     );
-    res.json({ count: result.rows[0].count });
+    res.json({ count: data });
   } catch (err) {
     next(err);
   }
@@ -40,6 +44,7 @@ router.patch('/:id/read', async (req, res, next) => {
       `UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );
+    deleteCacheKey(getUnreadKey(req.user.id));
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -52,6 +57,7 @@ router.patch('/read-all', async (req, res, next) => {
       `UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false`,
       [req.user.id]
     );
+    deleteCacheKey(getUnreadKey(req.user.id));
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -65,6 +71,7 @@ router.delete('/:id', async (req, res, next) => {
       `DELETE FROM notifications WHERE id = $1 AND user_id = $2`,
       [id, req.user.id]
     );
+    deleteCacheKey(getUnreadKey(req.user.id));
     res.json({ ok: true });
   } catch (err) {
     next(err);

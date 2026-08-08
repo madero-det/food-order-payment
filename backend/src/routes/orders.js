@@ -159,7 +159,7 @@ router.post('/', async (req, res, next) => {
     const person_id = isAdmin ? req.body.person_id : req.user.id;
     if (!order_date || !person_id) {
       client.release();
-      return res.status(400).json({ error: 'order_date and person_id are required' });
+      return res.status(400).json({ error: 'Order date and person are required' });
     }
 
     let totalPrice = 0;
@@ -167,7 +167,7 @@ router.post('/', async (req, res, next) => {
       for (const item of items) {
         if (!item.menu_item_id) {
           client.release();
-          return res.status(400).json({ error: 'Each item needs a menu_item_id' });
+          return res.status(400).json({ error: 'Please select an item for each entry in your order' });
         }
         totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
       }
@@ -175,17 +175,17 @@ router.post('/', async (req, res, next) => {
       const price = req.body.price;
       if (!price) {
         client.release();
-        return res.status(400).json({ error: 'price or items are required' });
+        return res.status(400).json({ error: 'Please select items or enter a total price' });
       }
       totalPrice = Number(price);
     }
     if (!isValidDate(order_date)) {
       client.release();
-      return res.status(400).json({ error: 'Invalid order_date' });
+      return res.status(400).json({ error: 'Invalid order date' });
     }
-    if (!isValidDateTime(transaction_date)) {
+    if (transaction_date && !isValidDateTime(transaction_date)) {
       client.release();
-      return res.status(400).json({ error: 'Invalid transaction_date' });
+      return res.status(400).json({ error: 'Invalid transaction date' });
     }
 
     if (!isAdmin && paid_amount) {

@@ -13,25 +13,54 @@ function getAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+const inFlightGETs = new Map();
+
 async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), ...options.headers },
-    ...options,
-  });
-  if (res.status === 401) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
-    window.location.reload();
-    throw new Error('Session expired');
+  const method = (options.method || 'GET').toUpperCase();
+  const url = `${API_BASE}${path}`;
+
+  // Deduplicate concurrent in-flight GET requests (e.g. React StrictMode double mounts)
+  if (method === 'GET' && inFlightGETs.has(url)) {
+    return inFlightGETs.get(url);
   }
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Request failed');
+
+  const reqPromise = (async () => {
+    try {
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders(), ...options.headers },
+        ...options,
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        window.location.reload();
+        throw new Error('Session expired');
+      }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || 'Request failed');
+      }
+      return await res.json();
+    } finally {
+      if (method === 'GET') {
+        inFlightGETs.delete(url);
+      }
+    }
+  })();
+
+  if (method === 'GET') {
+    inFlightGETs.set(url, reqPromise);
   }
-  return res.json();
+
+  return reqPromise;
 }
+
+let menuCache = null;
+let menuPromise = null;
+let personsCache = null;
+let personsPromise = null;
 
 export const api = {
   getCurrentUser: () => {
@@ -53,15 +82,81 @@ export const api = {
   approveDeletion: (id) => request(`/orders/${id}/approve-deletion`, { method: 'POST' }),
   cancelDeletion: (id) => request(`/orders/${id}/cancel-deletion`, { method: 'POST' }),
 
-  getPersons: () => request('/persons'),
-  createPerson: (data) => request('/persons', { method: 'POST', body: JSON.stringify(data) }),
-  updatePerson: (id, data) => request(`/persons/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deletePerson: (id) => request(`/persons/${id}`, { method: 'DELETE' }),
+  getPersons: (forceRefresh = false) => {
+    if (!forceRefresh && personsCache) {
+      return Promise.resolve(personsCache);
+    }
+    if (!forceRefresh && personsPromise) {
+      return personsPromise;
+    }
+    personsPromise = request('/persons')
+      .then((data) => {
+        personsCache = data;
+        personsPromise = null;
+        return data;
+      })
+      .catch((err) => {
+        personsPromise = null;
+        throw err;
+      });
+    return personsPromise;
+  },
+  clearPersonsCache: () => {
+    personsCache = null;
+  },
+  createPerson: async (data) => {
+    const res = await request('/persons', { method: 'POST', body: JSON.stringify(data) });
+    personsCache = null;
+    return res;
+  },
+  updatePerson: async (id, data) => {
+    const res = await request(`/persons/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    personsCache = null;
+    return res;
+  },
+  deletePerson: async (id) => {
+    const res = await request(`/persons/${id}`, { method: 'DELETE' });
+    personsCache = null;
+    return res;
+  },
 
-  getMenuItems: () => request('/menu'),
-  createMenuItem: (data) => request('/menu', { method: 'POST', body: JSON.stringify(data) }),
-  updateMenuItem: (id, data) => request(`/menu/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteMenuItem: (id) => request(`/menu/${id}`, { method: 'DELETE' }),
+  getMenuItems: (forceRefresh = false) => {
+    if (!forceRefresh && menuCache) {
+      return Promise.resolve(menuCache);
+    }
+    if (!forceRefresh && menuPromise) {
+      return menuPromise;
+    }
+    menuPromise = request('/menu')
+      .then((data) => {
+        menuCache = data;
+        menuPromise = null;
+        return data;
+      })
+      .catch((err) => {
+        menuPromise = null;
+        throw err;
+      });
+    return menuPromise;
+  },
+  clearMenuCache: () => {
+    menuCache = null;
+  },
+  createMenuItem: async (data) => {
+    const res = await request('/menu', { method: 'POST', body: JSON.stringify(data) });
+    menuCache = null;
+    return res;
+  },
+  updateMenuItem: async (id, data) => {
+    const res = await request(`/menu/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    menuCache = null;
+    return res;
+  },
+  deleteMenuItem: async (id) => {
+    const res = await request(`/menu/${id}`, { method: 'DELETE' });
+    menuCache = null;
+    return res;
+  },
 
   getDashboard: (params = {}) => {
     const qs = new URLSearchParams(params).toString();
@@ -95,6 +190,7 @@ export const api = {
       const err = await res.json().catch(() => ({ error: res.statusText }));
       throw new Error(err.error || 'Upload failed');
     }
+    personsCache = null;
     return res.json();
   },
 

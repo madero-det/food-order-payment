@@ -344,7 +344,7 @@ export default function DailyOrders() {
       </div>
 
       {showForm && (
-        <div className="modal-overlay" onClick={handleCancel}>
+        <div className="modal-overlay">
           <div className="modal" style={{ maxWidth: '720px', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <OrderForm
               key={editingOrder?.id || 'new'}

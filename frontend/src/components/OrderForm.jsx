@@ -76,6 +76,14 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     submitLockRef.current = true;
     setSubmitting(true);
     setErrorMsg('');
+
+    if (selectedItems.some(i => !i.menu_item_id)) {
+      setErrorMsg('Please select an item for each row in your order.');
+      submitLockRef.current = false;
+      setSubmitting(false);
+      return;
+    }
+
     const data = {
       ...formData,
       price: totalPrice || Number(formData.price),

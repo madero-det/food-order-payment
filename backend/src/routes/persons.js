@@ -5,6 +5,11 @@ import { existsSync, unlinkSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import pool from '../db.js';
+import { deleteCacheKey, getOrSet } from '../cache.js';
+
+const PERSONS_ADMIN_KEY = 'persons:admin';
+const PERSONS_ADMIN_TTL = 300;
+const PERSONS_USER_TTL = 60;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,12 +37,16 @@ const router = Router();
 router.get('/', async (req, res, next) => {
   try {
     const isAdmin = req.user.role === 'admin';
-    const query = isAdmin
-      ? 'SELECT id, name, role, profile_image, default_price, created_at FROM persons ORDER BY name ASC'
-      : 'SELECT id, name, role, profile_image, default_price, created_at FROM persons WHERE id = $1';
-    const params = isAdmin ? [] : [req.user.id];
-    const result = await pool.query(query, params);
-    res.json(result.rows);
+    const key = isAdmin ? PERSONS_ADMIN_KEY : `persons:user:${req.user.id}`;
+    const ttl = isAdmin ? PERSONS_ADMIN_TTL : PERSONS_USER_TTL;
+    const data = await getOrSet(key, ttl, () => {
+      const query = isAdmin
+        ? 'SELECT id, name, role, profile_image, default_price, created_at FROM persons ORDER BY name ASC'
+        : 'SELECT id, name, role, profile_image, default_price, created_at FROM persons WHERE id = $1';
+      const params = isAdmin ? [] : [req.user.id];
+      return pool.query(query, params).then(r => r.rows);
+    });
+    res.json(data);
   } catch (err) {
     next(err);
   }
@@ -73,6 +82,7 @@ router.post('/', async (req, res, next) => {
       'INSERT INTO persons (name, default_price) VALUES ($1, $2) RETURNING *',
       [name.trim(), default_price || null]
     );
+    deleteCacheKey(PERSONS_ADMIN_KEY);
     res.status(201).json(result.rows[0]);
   } catch (err) {
     if (err.code === '23505') {
@@ -99,6 +109,8 @@ router.put('/:id', async (req, res, next) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Person not found' });
     }
+    deleteCacheKey(PERSONS_ADMIN_KEY);
+    deleteCacheKey(`persons:user:${id}`);
     res.json(result.rows[0]);
   } catch (err) {
     if (err.code === '23505') {
@@ -126,6 +138,8 @@ router.delete('/:id', async (req, res, next) => {
         if (existsSync(filePath)) unlinkSync(filePath);
       }
     }
+    deleteCacheKey(PERSONS_ADMIN_KEY);
+    deleteCacheKey(`persons:user:${id}`);
     res.json({ message: 'Person deleted', id: result.rows[0].id });
   } catch (err) {
     next(err);
@@ -167,6 +181,8 @@ router.post('/:id/avatar', upload.single('image'), async (req, res, next) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Person not found' });
     }
+    deleteCacheKey(PERSONS_ADMIN_KEY);
+    deleteCacheKey(`persons:user:${id}`);
     res.json(result.rows[0]);
   } catch (err) {
     next(err);
