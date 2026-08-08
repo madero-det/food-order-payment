@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Trash2, Plus, DollarSign, Building2, X } from 'lucide-react';
 
 export default function OrderForm({ persons, menuItems = [], onSubmit, initialData = {}, onCancel, isAdmin = true, isEditing = false }) {
   const [submitting, setSubmitting] = useState(false);
@@ -125,7 +126,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
       {errorMsg && (
         <div className="alert alert-error" style={{ marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.6rem 0.8rem', borderRadius: '6px', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', fontSize: '0.85rem' }}>
           <span>{errorMsg}</span>
-          <button type="button" onClick={() => setErrorMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 'bold', marginLeft: '0.5rem' }}>✕</button>
+          <button type="button" onClick={() => setErrorMsg('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 'bold', marginLeft: '0.5rem' }}><X size={16} /></button>
         </div>
       )}
       {isAdmin ? (
@@ -250,7 +251,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
                 <button type="button" className="food-qty-btn" onClick={() => updateQty(si.id, (si.quantity || 1) + 1)}>+</button>
               </div>
               <button type="button" className="food-item-del" onClick={() => removeItem(si.id)} title="Remove">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                <Trash2 size={16} color="var(--color-danger)" />
               </button>
             </div>
           );
@@ -263,7 +264,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
             setSelectedItems(prev => [...prev, { menu_item_id: '', quantity: 1, price: 0, id: Date.now() + Math.random() }]);
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <Plus size={16} />
           Add Another Item
         </button>
 
@@ -288,8 +289,8 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           <label>Payment Method</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {[
-              { value: 'cash', label: 'Cash', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
-              { value: 'bank', label: 'Bank Transfer', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> },
+              { value: 'cash', label: 'Cash', icon: <DollarSign size={20} /> },
+              { value: 'bank', label: 'Bank Transfer', icon: <Building2 size={20} /> },
             ].map((opt) => {
               const isSelected = formData.payment_method === opt.value;
               const isDisabled = !isAdmin && isEditing;
@@ -323,7 +324,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           )}
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', justifyContent: 'flex-end' }}>
         <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? 'Saving...' : 'Save'}</button>
         {onCancel && <button type="button" className="btn btn-ghost" onClick={onCancel}>Cancel</button>}
       </div>

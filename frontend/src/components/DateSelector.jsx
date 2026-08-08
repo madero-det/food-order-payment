@@ -1,3 +1,5 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 export default function DateSelector({ date, onChange }) {
   const shift = (days) => {
     const parts = date.split('-');
@@ -19,13 +21,14 @@ export default function DateSelector({ date, onChange }) {
 
   return (
     <div className="date-nav">
-      <button className="btn btn-ghost" onClick={() => shift(-1)}>← Prev</button>
+      <button className="btn btn-ghost" onClick={() => shift(-1)} aria-label="Previous day"><ChevronLeft size={16} /> Prev</button>
       <input
         type="date"
         value={date}
         onChange={(e) => onChange(e.target.value)}
+        aria-label="Select date"
       />
-      <button className="btn btn-ghost" onClick={() => shift(1)}>Next →</button>
+      <button className="btn btn-ghost" onClick={() => shift(1)} aria-label="Next day">Next <ChevronRight size={16} /></button>
       <button className="btn btn-ghost" onClick={goToToday}>Today</button>
     </div>
   );

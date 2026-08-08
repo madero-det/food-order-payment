@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Camera, Bell } from 'lucide-react';
 import { api, getImageUrl } from '../api/client';
 import CropModal from '../components/CropModal';
 
@@ -114,7 +115,7 @@ export default function Settings({ onUserUpdate }) {
               </div>
             )}
             <div className="settings-avatar-hover">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <Camera size={20} />
             </div>
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
           </div>
@@ -134,7 +135,7 @@ export default function Settings({ onUserUpdate }) {
         <div className="card" style={{ marginBottom: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <Bell size={20} stroke="#6b7280" />
               <div>
                 <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>Push Notifications</div>
                 <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Get notified when payments are approved/rejected</div>

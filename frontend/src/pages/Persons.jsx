@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MoreHorizontal, Pencil, Lock, Trash2, Camera, Plus } from 'lucide-react';
 import { api, getImageUrl } from '../api/client';
 import PersonForm from '../components/PersonForm';
 import CropModal from '../components/CropModal';
@@ -47,7 +48,7 @@ function PersonAvatar({ src, name, personId, canEdit, onUploaded }) {
       <div className="avatar-upload" onClick={() => fileRef.current?.click()}>
         {avatar}
         <div className="settings-avatar-hover">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <Camera size={14} />
         </div>
         <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} />
       </div>
@@ -167,7 +168,7 @@ export default function Persons({ user, onUserUpdate }) {
           <h1>Persons</h1>
           {isAdmin && (
             <button className="btn btn-primary" onClick={() => { setShowForm(!showForm); setEditingPerson(null); }}>
-              {showForm ? 'Close' : '+ Add Person'}
+              {showForm ? 'Close' : <><Plus size={16} /> Add Person</>}
             </button>
           )}
         </div>
@@ -197,19 +198,19 @@ export default function Persons({ user, onUserUpdate }) {
                   {isAdmin && (
                     <ActionDropdown className="person-card-menu">
                       <button className="btn btn-ghost btn-sm actions-dots" title="Actions">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                        <MoreHorizontal size={16} />
                       </button>
                       <div className="actions-dropdown-menu">
                         <button className="btn btn-ghost btn-sm" onClick={() => { setEditingPerson(p); setShowForm(true); }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                          <Pencil size={14} />
                           <span>Edit</span>
                         </button>
                         <button className="btn btn-ghost btn-sm" onClick={() => { setResetModal(p); setNewPwd(''); setConfirmPwd(''); setPwdError(''); setPwdSuccess(''); }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                          <Lock size={14} />
                           <span>Reset Password</span>
                         </button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(p)} style={{ color: '#dc2626' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(p)} style={{ color: 'var(--color-danger)' }}>
+                          <Trash2 size={14} />
                           <span>Delete</span>
                         </button>
                       </div>
@@ -277,13 +278,13 @@ export default function Persons({ user, onUserUpdate }) {
                   {isAdmin && (
                     <div className="order-card-actions">
                       <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => { setEditingPerson(p); setShowForm(true); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        <Pencil size={14} />
                       </button>
                       <button className="btn btn-ghost btn-sm" title="Reset Password" onClick={() => { setResetModal(p); setNewPwd(''); setConfirmPwd(''); setPwdError(''); setPwdSuccess(''); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <Lock size={14} />
                       </button>
                       <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => handleDelete(p)}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   )}

@@ -11,7 +11,7 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: '2rem', textAlign: 'center', color: '#dc2626' }}>
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-danger)' }}>
           <h3>Something went wrong</h3>
           <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', wordBreak: 'break-all' }}>{this.state.error.message}</p>
           <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => { this.setState({ error: null }); window.location.reload(); }}>
@@ -26,6 +26,10 @@ class ErrorBoundary extends Component {
 
 import { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard, ShoppingCart, Users, UserCircle, Bell, Settings as SettingsIcon, LogOut,
+  Sun, Moon, Menu, X, ChefHat
+} from 'lucide-react';
 import Login, { loadAuth, clearAuth } from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DailyOrders from './pages/DailyOrders';
@@ -191,56 +195,58 @@ function AppContent() {
     <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ErrorBoundary>
       <div className="app">
-        <nav className="navbar">
-          <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? '✕' : '☰'}
+        <a href="#main-content" className="skip-link">Skip to content</a>
+        <nav className="navbar" role="navigation" aria-label="Main navigation">
+          <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <div className={`nav-overlay${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(false)} />
-          <div className={`nav-links${menuOpen ? ' open' : ''}`}>
+          <div className={`nav-overlay${menuOpen ? ' open' : ''}`} onClick={() => setMenuOpen(false)} aria-hidden="true" />
+          <div className={`nav-links${menuOpen ? ' open' : ''}`} role="menu">
             <div className="nav-brand">Food Order Payment</div>
-            <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>Dashboard</NavLink>
-            <NavLink to="/orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>Orders</NavLink>
-            <NavLink to="/person-orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>{user.role === 'admin' ? 'Person Orders' : 'My Orders'}</NavLink>
+            <NavLink to="/" end className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+              <LayoutDashboard size={18} /> <span className="nav-link-text">Dashboard</span>
+            </NavLink>
+            <NavLink to="/orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+              <ShoppingCart size={18} /> <span className="nav-link-text">Orders</span>
+            </NavLink>
+            <NavLink to="/person-orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+              <UserCircle size={18} /> <span className="nav-link-text">{user.role === 'admin' ? 'Person Orders' : 'My Orders'}</span>
+            </NavLink>
             {user.role === 'admin' && (
-              <NavLink to="/persons" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>Persons</NavLink>
+              <NavLink to="/persons" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+                <Users size={18} /> <span className="nav-link-text">Persons</span>
+              </NavLink>
             )}
             {user.role === 'admin' && (
-              <NavLink to="/menu" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)}>Menu</NavLink>
+              <NavLink to="/menu" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+                <ChefHat size={18} /> <span className="nav-link-text">Menu</span>
+              </NavLink>
             )}
           </div>
           <div className="nav-right">
             <NavbarAvatar user={user} />
             <span className="nav-user-text" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}>
-              {user.name} {user.role === 'admin' && <span style={{ background: '#d97706', padding: '0.15rem 0.5rem', borderRadius: '10px', fontSize: '0.7rem', marginLeft: '0.25rem' }}>Admin</span>}
+              {user.name} {user.role === 'admin' && <span style={{ background: 'var(--color-warning)', padding: '0.15rem 0.5rem', borderRadius: 'var(--radius-full)', fontSize: '0.7rem', marginLeft: '0.25rem' }}>Admin</span>}
             </span>
-            <NavLink to="/notifications" className="btn btn-ghost" style={{ color: '#fff', fontSize: '0.85rem', textDecoration: 'none', padding: '0.4rem 0.65rem', borderRadius: '6px', background: 'rgba(255,255,255,0.15)', position: 'relative' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <NavLink to="/notifications" className="nav-icon-btn has-badge" aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}>
+              <Bell size={16} />
               {unreadCount > 0 && (
-                <span style={{
-                  position: 'absolute', top: -4, right: -4,
-                  background: '#dc2626', color: '#fff', fontSize: '0.65rem',
-                  fontWeight: 700, minWidth: 16, height: 16, lineHeight: '16px',
-                  textAlign: 'center', borderRadius: 8, padding: '0 4px',
-                }}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+                <span className="badge-dot">{unreadCount > 99 ? '99+' : unreadCount}</span>
               )}
             </NavLink>
-            <NavLink to="/settings" className="btn btn-ghost" style={{ color: '#fff', fontSize: '0.85rem', textDecoration: 'none', padding: '0.4rem 0.75rem', borderRadius: '6px', background: 'rgba(255,255,255,0.15)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: '-2px' }}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span className="nav-settings-text" style={{ marginLeft: '0.35rem' }}>Settings</span>
+            <NavLink to="/settings" className="nav-icon-btn" aria-label="Settings">
+              <SettingsIcon size={16} />
+              <span className="nav-settings-text">Settings</span>
             </NavLink>
-            <button className="btn btn-ghost" onClick={() => setDarkMode(!darkMode)} title={darkMode ? 'Light mode' : 'Dark mode'} style={{ color: '#fff', padding: '0.4rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.15)' }}>
-              {darkMode ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-              )}
+            <button className="nav-icon-btn" onClick={() => setDarkMode(!darkMode)} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}>
+              {darkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <button className="btn btn-ghost" onClick={handleLogout} title="Logout" style={{ color: '#fff', padding: '0.4rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.15)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <button className="nav-icon-btn" onClick={handleLogout} aria-label="Logout">
+              <LogOut size={16} />
             </button>
           </div>
         </nav>
-        <main className="container">
+        <main className="container" id="main-content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/orders" element={<DailyOrders />} />

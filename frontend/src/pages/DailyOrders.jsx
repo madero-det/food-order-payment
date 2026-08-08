@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { DollarSign, Building2, Plus } from 'lucide-react';
 import { api } from '../api/client';
 import DateSelector from '../components/DateSelector';
 import OrderTable from '../components/OrderTable';
@@ -321,7 +322,7 @@ export default function DailyOrders() {
               <div>Unpaid: <span style={{ color: '#dc2626' }}>{(totalPrice - totalPaid).toLocaleString()} R</span></div>
             </div>
             <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditingOrder(null); }}>
-              + New Order
+              <Plus size={16} /> New Order
             </button>
           </div>
 
@@ -368,8 +369,8 @@ export default function DailyOrders() {
               <label>Payment Method</label>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {[
-                  { value: 'cash', label: 'Cash', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
-                  { value: 'bank', label: 'Bank Transfer', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> },
+                   { value: 'cash', label: 'Cash', icon: <DollarSign size={20} /> },
+                   { value: 'bank', label: 'Bank Transfer', icon: <Building2 size={20} /> },
                 ].map((opt) => {
                   const isSelected = payModal.paymentMethod === opt.value;
                   return (

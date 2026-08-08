@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 import { api } from '../api/client';
 
 export default function MenuPage() {
@@ -89,7 +90,7 @@ export default function MenuPage() {
           <h1>Menu</h1>
           {!editingId && (
             <button className="btn btn-primary" onClick={() => { setName(''); setPrice(''); setEditingId('new'); }}>
-              + New Item
+              <Plus size={16} /> New Item
             </button>
           )}
         </div>
@@ -153,7 +154,7 @@ export default function MenuPage() {
                   <tr key={item.id}>
                     <td>{idx + 1}</td>
                     <td><strong>{item.name}</strong></td>
-                    <td><span className={`badge ${item.type === 'dessert' ? 'badge-pending' : 'badge-paid'}`} style={{ fontSize: '0.7rem' }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
+                    <td><span className={`badge ${item.type === 'dessert' ? 'badge-paid' : 'badge-paid'}`} style={{ fontSize: '0.7rem', background: item.type === 'dessert' ? 'var(--color-badge-pending-bg)' : undefined, color: item.type === 'dessert' ? 'var(--color-badge-pending-text)' : undefined }}>{item.type === 'dessert' ? 'Dessert' : 'Food'}</span></td>
                     <td>{Number(item.price).toLocaleString()} R</td>
                     <td>
                       <label className="toggle-switch" style={{ margin: 0 }}>
@@ -164,10 +165,10 @@ export default function MenuPage() {
                     <td>
                       <div className="table-actions">
                         <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => handleEdit(item)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                          <Pencil size={14} />
                         </button>
                         <button className="btn btn-ghost btn-sm btn-danger" title="Delete" onClick={() => setDeleteModal({ show: true, id: item.id })}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>

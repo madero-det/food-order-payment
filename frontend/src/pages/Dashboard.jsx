@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FileSpreadsheet, ShoppingCart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { api, getImageUrl } from '../api/client';
 import { API_BASE } from '../api/client';
@@ -82,17 +83,30 @@ export default function Dashboard() {
     return { name: `${day} ${MONTHS_SHORT[m]}`, total: d.total, paid: d.paid };
   }) || [];
 
-  const dailyMaxTotal = dailyChartData.length ? Math.max(...dailyChartData.map(d => d.total)) : 0;
-  const monthlyMaxTotal = monthlyData.length ? Math.max(...monthlyData.map(d => d.total)) : 0;
-
-  const maxDot = (color, maxValue) => (props) => {
-    const { cx, cy, payload } = props;
-    if (!cx || !cy) return null;
-    const isMax = payload.total === maxValue && maxValue > 0;
-    return <circle cx={cx} cy={cy} r={isMax ? 5 : 3} fill={isMax ? '#dc2626' : color} />;
-  };
-
-  if (loading) return <div className="empty-state" style={{ animation: 'pulse 1.5s infinite' }}>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="animate-fade-in-up">
+        <div className="page-header">
+          <div className="skeleton skeleton-text lg" style={{ width: 140, height: 24 }} />
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div className="skeleton" style={{ width: 120, height: 36, borderRadius: 'var(--radius-sm)' }} />
+            <div className="skeleton" style={{ width: 80, height: 36, borderRadius: 'var(--radius-sm)' }} />
+            <div className="skeleton" style={{ width: 100, height: 36, borderRadius: 'var(--radius-sm)' }} />
+          </div>
+        </div>
+        <div className="stats-grid">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="skeleton-stat-card">
+              <div className="skeleton" style={{ height: 12, width: '50%', marginBottom: 12 }} />
+              <div className="skeleton" style={{ height: 28, width: '70%' }} />
+            </div>
+          ))}
+        </div>
+        <div className="skeleton-card" style={{ height: 350 }} />
+        <div className="skeleton-card" style={{ marginTop: '1rem', height: 350 }} />
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in-up">
@@ -109,7 +123,7 @@ export default function Dashboard() {
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <button className="btn btn-primary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.9rem', border: '1px solid #1d4ed8', lineHeight: 'normal' }} onClick={async () => {
+          <button className="btn btn-primary" onClick={async () => {
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             const res = await fetch(`${API_BASE}/dashboard/export?month=${month}&year=${year}`, {
               headers: { Authorization: `Bearer ${token}` }
@@ -121,7 +135,7 @@ export default function Dashboard() {
             a.download = `orders-${year}-${String(month).padStart(2,'0')}.xlsx`;
             a.click();
             URL.revokeObjectURL(url);
-          }}>Export Excel</button>
+          }}><FileSpreadsheet size={16} /> Export Excel</button>
         </div>
       </div>
 
@@ -156,7 +170,7 @@ export default function Dashboard() {
               <h2>Today's Orders</h2>
             </div>
             {data.today_orders.length === 0 ? (
-              <div className="empty-state">No orders today</div>
+              <div className="empty-state"><ShoppingCart size={32} /><p>No orders today</p></div>
             ) : (
               <>
               <div className="table-wrapper">
@@ -268,8 +282,8 @@ export default function Dashboard() {
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={formatK} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={maxDot('#2563eb', dailyMaxTotal)} />
-                    <Line type="monotone" dataKey="paid" name="Paid" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="paid" name="Paid" stroke="#059669" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -288,8 +302,8 @@ export default function Dashboard() {
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={formatK} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={maxDot('#2563eb', monthlyMaxTotal)} />
-                  <Line type="monotone" dataKey="paid" name="Paid" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="paid" name="Paid" stroke="#059669" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

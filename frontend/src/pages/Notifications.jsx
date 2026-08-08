@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CheckCircle, XCircle, AlertCircle, Trash2, Bell, RefreshCw, Check, X } from 'lucide-react';
 import { api } from '../api/client';
 
 function timeAgo(dateStr) {
@@ -20,21 +21,21 @@ function timeAgo(dateStr) {
 function notifIcon(type) {
   switch (type) {
     case 'payment_approved':
-      return { color: '#16a34a', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> };
+      return { color: '#16a34a', icon: <CheckCircle size={18} /> };
     case 'payment_rejected':
-      return { color: '#dc2626', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> };
+      return { color: '#dc2626', icon: <XCircle size={18} /> };
     case 'payment_submitted':
-      return { color: '#d97706', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> };
+      return { color: '#d97706', icon: <AlertCircle size={18} /> };
     case 'payment_updated':
-      return { color: '#2563eb', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><polyline points="4 4 4 9 9 9"/></svg> };
+      return { color: '#2563eb', icon: <RefreshCw size={18} /> };
     case 'deletion_requested':
-      return { color: '#d97706', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> };
+      return { color: '#d97706', icon: <Trash2 size={18} /> };
     case 'deletion_cancelled':
-      return { color: '#6b7280', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> };
+      return { color: '#6b7280', icon: <XCircle size={18} /> };
     case 'deletion_approved':
-      return { color: '#16a34a', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> };
+      return { color: '#16a34a', icon: <CheckCircle size={18} /> };
     default:
-      return { color: '#6b7280', svg: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> };
+      return { color: '#6b7280', icon: <Bell size={18} /> };
   }
 }
 
@@ -121,11 +122,11 @@ export default function Notifications({ onCountChange }) {
       </div>
 
       {loading ? (
-        <p style={{ color: '#6b7280', textAlign: 'center', padding: '2rem' }}>Loading...</p>
+        <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: '2rem' }}>Loading...</p>
       ) : notifications.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1rem' }}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <p style={{ color: '#9ca3af' }}>No notifications yet</p>
+          <Bell size={48} stroke="#d1d5db" strokeWidth={1.5} style={{ margin: '0 auto 1rem', display: 'block' }} />
+          <p style={{ color: 'var(--color-text-muted)' }}>No notifications yet</p>
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -154,7 +155,7 @@ export default function Notifications({ onCountChange }) {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  {icon.svg}
+                  {notifIcon(notif.type).icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
@@ -169,9 +170,9 @@ export default function Notifications({ onCountChange }) {
                     background: 'none', border: 'none', cursor: 'pointer',
                     color: '#9ca3af', padding: '0.25rem', flexShrink: 0,
                   }}
-                  title="Delete"
+                  title="Delete notification"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <X size={14} />
                 </button>
               </div>
             );
