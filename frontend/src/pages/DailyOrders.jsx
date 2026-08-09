@@ -140,6 +140,7 @@ export default function DailyOrders() {
           person_avatar: result.person_avatar || null,
           notes: result.notes || null,
           payment_method: result.payment_method || null,
+          additional_price: result.additional_price ?? 0,
           items: result.items || [],
         }]);
       }
@@ -164,6 +165,7 @@ export default function DailyOrders() {
           person_name: result.person_name ?? o.person_name,
           notes: result.notes !== undefined ? result.notes : o.notes,
           payment_method: result.payment_method !== undefined ? result.payment_method : o.payment_method,
+          additional_price: result.additional_price !== undefined ? result.additional_price : o.additional_price,
           items: result.items !== undefined ? result.items : o.items,
         } : o));
     } catch (err) {

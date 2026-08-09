@@ -53,11 +53,12 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
     transaction_date: toDatetimeInput(initialData.transaction_date),
     notes: initialData.notes || '',
     payment_method: initialData.payment_method || (isEditing ? (initialData.payment_method || '') : 'bank'),
+    additional_price: toPriceString(initialData.additional_price) || '',
   });
 
     const [selectedItems, setSelectedItems] = useState(initItems);
 
-    const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0);
+    const totalPrice = selectedItems.reduce((s, i) => s + (Number(i.price) * (i.quantity || 1)), 0) + (Number(formData.additional_price) || 0);
 
     useEffect(() => {
       setFormData(prev => ({ ...prev, price: totalPrice || prev.price }));
@@ -93,6 +94,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
       transaction_date: formData.transaction_date || null,
       notes: formData.notes || null,
       payment_method: formData.payment_method || null,
+      additional_price: formData.additional_price !== '' ? Number(formData.additional_price) : 0,
       items: selectedItems.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity, price: i.price })),
     };
     try {
@@ -273,6 +275,18 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
             Total: {totalPrice.toLocaleString()} R
           </div>
         )}
+      </div>
+
+      <div className="form-group" style={{ marginTop: '0.5rem' }}>
+        <label>Additional Amount (Riel)</label>
+        <input
+          type="number"
+          min="0"
+          step="100"
+          value={formData.additional_price}
+          onChange={(e) => setFormData({ ...formData, additional_price: e.target.value })}
+          placeholder="Add extra amount on top of items total"
+        />
       </div>
 
       <div className="form-group" style={{ marginTop: '0.5rem' }}>

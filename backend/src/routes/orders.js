@@ -71,7 +71,7 @@ router.get('/', async (req, res, next) => {
 
     const dataQuery = `
       SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.transaction_date, fo.payment_status, fo.deletion_status,
-             fo.notes, fo.payment_method,
+             fo.notes, fo.payment_method, fo.additional_price,
              p.id as person_id, p.name as person_name, p.profile_image as person_avatar,
               COALESCE(json_agg(json_build_object(
                 'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
@@ -131,7 +131,7 @@ router.get('/:id', async (req, res, next) => {
 
     const result = await pool.query(
       `SELECT fo.id, fo.order_date, fo.price, fo.paid_amount, fo.transaction_date, fo.payment_status, fo.deletion_status,
-              fo.notes, fo.payment_method,
+              fo.notes, fo.payment_method, fo.additional_price,
               p.id as person_id, p.name as person_name, p.profile_image as person_avatar,
               COALESCE(json_agg(json_build_object(
                 'id', oi.id, 'menu_item_id', oi.menu_item_id, 'quantity', oi.quantity, 'price', oi.price,
@@ -154,7 +154,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const { order_date, paid_amount, transaction_date, notes, payment_method, items } = req.body;
+    const { order_date, paid_amount, transaction_date, notes, payment_method, items, additional_price } = req.body;
     const isAdmin = req.user.role === 'admin';
     const person_id = isAdmin ? req.body.person_id : req.user.id;
     if (!order_date || !person_id) {
@@ -162,6 +162,7 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ error: 'Order date and person are required' });
     }
 
+    const additionalPrice = Number(additional_price) || 0;
     let totalPrice = 0;
     if (items && items.length) {
       for (const item of items) {
@@ -179,6 +180,7 @@ router.post('/', async (req, res, next) => {
       }
       totalPrice = Number(price);
     }
+    totalPrice += additionalPrice;
     if (!isValidDate(order_date)) {
       client.release();
       return res.status(400).json({ error: 'Invalid order date' });
@@ -208,10 +210,10 @@ router.post('/', async (req, res, next) => {
     await client.query('BEGIN');
 
     const result = await client.query(
-      `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, payment_status, menu_item_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, payment_status, menu_item_id, additional_price)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
-      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, payment_status, null]
+      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, payment_status, null, additionalPrice]
     );
     const order = result.rows[0];
 
@@ -283,7 +285,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const isAdmin = req.user.role === 'admin';
-    const { order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, items } = req.body;
+    const { order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, items, additional_price } = req.body;
 
     if (!isAdmin) {
       const check = await pool.query('SELECT person_id, price, paid_amount as old_paid FROM food_orders WHERE id = $1', [id]);
@@ -379,10 +381,11 @@ router.put('/:id', async (req, res, next) => {
            transaction_date = $5,
            notes = COALESCE($6, notes),
            payment_method = $7,
+           additional_price = $9,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $8
        RETURNING *`,
-      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes || null, payment_method || null, id]
+      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes || null, payment_method || null, id, Number(additional_price) || 0]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
@@ -407,7 +410,11 @@ router.put('/:id', async (req, res, next) => {
           }
         }
         if (items.length > 0) {
-          await client.query('UPDATE food_orders SET price = $1 WHERE id = $2', [totalPrice, id]);
+          const addPrice = Number(additional_price) || 0;
+          await client.query('UPDATE food_orders SET price = $1, additional_price = $2 WHERE id = $3', [totalPrice + addPrice, addPrice, id]);
+        } else {
+          const addPrice = Number(additional_price) || 0;
+          await client.query('UPDATE food_orders SET additional_price = $1 WHERE id = $2', [addPrice, id]);
         }
         await client.query('COMMIT');
       } catch (err) {

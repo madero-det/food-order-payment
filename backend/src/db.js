@@ -122,6 +122,11 @@ export const initDB = async () => {
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
 
+      DO $$ BEGIN
+        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS additional_price DECIMAL(10,2) DEFAULT 0;
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
       CREATE TABLE IF NOT EXISTS menu_items (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL UNIQUE,
