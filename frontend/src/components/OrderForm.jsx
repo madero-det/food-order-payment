@@ -284,6 +284,16 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
           min="0"
           step="100"
           value={formData.additional_price}
+          onFocus={() => {
+            if (formData.additional_price === '0') {
+              setFormData({ ...formData, additional_price: '' });
+            }
+          }}
+          onBlur={() => {
+            if (formData.additional_price === '') {
+              setFormData({ ...formData, additional_price: '0' });
+            }
+          }}
           onChange={(e) => setFormData({ ...formData, additional_price: e.target.value })}
           placeholder="Add extra amount on top of items total"
         />
