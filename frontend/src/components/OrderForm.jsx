@@ -278,7 +278,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
       </div>
 
       <div className="form-group" style={{ marginTop: '0.5rem' }}>
-        <label>Additional Amount (Riel)</label>
+        <label>Additional Price (Riel)</label>
         <input
           type="number"
           min="0"
