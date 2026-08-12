@@ -8,18 +8,18 @@ const router = Router();
 
 router.post('/login', async (req, res, next) => {
   try {
-    const { name, password } = req.body;
-    if (!name || !password) {
-      return res.status(400).json({ error: 'Name and password are required' });
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const result = await pool.query(
-      'SELECT id, name, password_hash, role, profile_image FROM persons WHERE LOWER(name) = LOWER($1)',
-      [name.trim()]
+      'SELECT id, name, email, password_hash, role, profile_image FROM persons WHERE LOWER(email) = LOWER($1)',
+      [email.trim()]
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid name or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const person = result.rows[0];
@@ -30,18 +30,18 @@ router.post('/login', async (req, res, next) => {
 
     const valid = await bcrypt.compare(password, person.password_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid name or password' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = jwt.sign(
-      { id: person.id, name: person.name, role: person.role },
+      { id: person.id, name: person.name, email: person.email, role: person.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.json({
       token,
-      user: { id: person.id, name: person.name, role: person.role, profile_image: person.profile_image || null },
+      user: { id: person.id, name: person.name, email: person.email, role: person.role, profile_image: person.profile_image || null },
     });
   } catch (err) {
     next(err);
@@ -50,15 +50,15 @@ router.post('/login', async (req, res, next) => {
 
 router.post('/register', authenticate, requireAdmin, async (req, res, next) => {
   try {
-    const { name, password, role } = req.body;
-    if (!name || !password) {
-      return res.status(400).json({ error: 'Name and password are required' });
+    const { email, password, role } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      'UPDATE persons SET password_hash = $1, role = COALESCE($2, role) WHERE LOWER(name) = LOWER($3) RETURNING id, name, role',
-      [hash, role || null, name.trim()]
+      'UPDATE persons SET password_hash = $1, role = COALESCE($2, role) WHERE LOWER(email) = LOWER($3) RETURNING id, name, email, role',
+      [hash, role || null, email.trim()]
     );
 
     if (result.rows.length === 0) {

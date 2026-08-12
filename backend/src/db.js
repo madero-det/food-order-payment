@@ -42,7 +42,8 @@ export const initDB = async () => {
     await client.query(`
       CREATE TABLE IF NOT EXISTS persons (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL UNIQUE,
+        name VARCHAR(100) NOT NULL,
+        email VARCHAR(255),
         password_hash VARCHAR(255) NOT NULL DEFAULT '',
         role VARCHAR(20) NOT NULL DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -106,6 +107,19 @@ export const initDB = async () => {
         ALTER TABLE persons ADD COLUMN IF NOT EXISTS telegram_chat_id VARCHAR(50);
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
+
+      DO $$ BEGIN
+        ALTER TABLE persons ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      DO $$ BEGIN
+        ALTER TABLE persons DROP CONSTRAINT IF EXISTS persons_name_key;
+      EXCEPTION WHEN undefined_object THEN null;
+      END $$;
+
+      ALTER TABLE persons DROP CONSTRAINT IF EXISTS persons_email_key;
+      ALTER TABLE persons ADD CONSTRAINT persons_email_key UNIQUE (email);
 
       DO $$ BEGIN
         ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS notes TEXT;

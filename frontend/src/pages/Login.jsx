@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { API_BASE } from '../api/client';
 
-function saveAuth(token, user, remember, name) {
+function saveAuth(token, user, remember, email) {
   const storage = remember ? localStorage : sessionStorage;
   storage.setItem('token', token);
   storage.setItem('user', JSON.stringify(user));
   if (remember) {
-    localStorage.setItem('savedName', name);
+    localStorage.setItem('savedEmail', email);
   }
 }
 
@@ -17,8 +17,8 @@ function loadAuth() {
   return null;
 }
 
-function getSavedName() {
-  return localStorage.getItem('savedName') || '';
+function getSavedEmail() {
+  return localStorage.getItem('savedEmail') || '';
 }
 
 function clearAuth() {
@@ -28,12 +28,12 @@ function clearAuth() {
   sessionStorage.removeItem('user');
 }
 
-export { saveAuth, loadAuth, clearAuth, getSavedName };
+export { saveAuth, loadAuth, clearAuth, getSavedEmail };
 
 export default function Login({ onLogin }) {
-  const [name, setName] = useState(() => getSavedName());
+  const [email, setEmail] = useState(() => getSavedEmail());
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(() => !!localStorage.getItem('savedName'));
+  const [remember, setRemember] = useState(() => !!localStorage.getItem('savedEmail'));
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +45,7 @@ export default function Login({ onLogin }) {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -53,7 +53,7 @@ export default function Login({ onLogin }) {
         setLoading(false);
         return;
       }
-      saveAuth(data.token, data.user, remember, name.trim());
+      saveAuth(data.token, data.user, remember, email.trim());
       onLogin(data.user);
     } catch (err) {
       setError(err.message === 'Failed to fetch' ? 'Cannot reach server. Check network connection.' : err.message || 'Connection error');
@@ -73,12 +73,12 @@ export default function Login({ onLogin }) {
         )}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Name</label>
+            <label>Email</label>
             <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
               required
               autoFocus
             />

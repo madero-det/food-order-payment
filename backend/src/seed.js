@@ -3,9 +3,20 @@ import bcrypt from 'bcryptjs';
 
 const seedData = {
   persons: [
-    'Bona', 'Denish', 'Sreythinh', 'Kimheang', 'Saven', 'Madero',
-    'Sreymom', 'Chhordeth', 'Lyda', 'Sokty', 'Sreyni', 'Muny',
-    'Piseth', 'Ouhsa',
+    { name: 'Bona', email: 'bona@food.example.com' },
+    { name: 'Denish', email: 'denish@food.example.com' },
+    { name: 'Sreythinh', email: 'sreythinh@food.example.com' },
+    { name: 'Kimheang', email: 'kimheang@food.example.com' },
+    { name: 'Saven', email: 'saven@food.example.com' },
+    { name: 'Madero', email: 'madero@food.example.com' },
+    { name: 'Sreymom', email: 'sreymom@food.example.com' },
+    { name: 'Chhordeth', email: 'chhordeth@food.example.com' },
+    { name: 'Lyda', email: 'lyda@food.example.com' },
+    { name: 'Sokty', email: 'sokty@food.example.com' },
+    { name: 'Sreyni', email: 'sreyni@food.example.com' },
+    { name: 'Muny', email: 'muny@food.example.com' },
+    { name: 'Piseth', email: 'piseth@food.example.com' },
+    { name: 'Ouhsa', email: 'ouhsa@food.example.com' },
   ],
   orders: [
     // 07-Jul
@@ -107,10 +118,10 @@ const seed = async () => {
     await client.query('DELETE FROM food_orders');
     await client.query('DELETE FROM persons');
 
-    for (const name of seedData.persons) {
+    for (const person of seedData.persons) {
       const hash = await bcrypt.hash('password123', 10);
-      const role = name === 'Madero' ? 'admin' : 'user';
-      await client.query('INSERT INTO persons (name, password_hash, role) VALUES ($1, $2, $3)', [name, hash, role]);
+      const role = person.name === 'Madero' ? 'admin' : 'user';
+      await client.query('INSERT INTO persons (name, email, password_hash, role) VALUES ($1, $2, $3, $4)', [person.name, person.email, hash, role]);
     }
 
     const personMap = {};

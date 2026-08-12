@@ -121,6 +121,10 @@ function AppContent() {
 
   useSSE((event, data) => {
     if (!user) return;
+    if (event === 'notification_read') {
+      refreshUnread();
+      return;
+    }
     const uid = Number(user.pid || user.id);
     const pid = Number(data.person_id);
     if (event === 'payment_approved') {

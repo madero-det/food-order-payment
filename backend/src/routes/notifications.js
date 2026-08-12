@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../db.js';
 import { getUnreadKey, getOrSet, deleteCacheKey } from '../cache.js';
+import { sendToUser } from '../events.js';
 
 const router = Router();
 
@@ -45,6 +46,7 @@ router.patch('/:id/read', async (req, res, next) => {
       [id, req.user.id]
     );
     deleteCacheKey(getUnreadKey(req.user.id));
+    sendToUser(req.user.id, 'notification_read', {});
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -58,6 +60,7 @@ router.patch('/read-all', async (req, res, next) => {
       [req.user.id]
     );
     deleteCacheKey(getUnreadKey(req.user.id));
+    sendToUser(req.user.id, 'notification_read', {});
     res.json({ ok: true });
   } catch (err) {
     next(err);
@@ -72,6 +75,7 @@ router.delete('/:id', async (req, res, next) => {
       [id, req.user.id]
     );
     deleteCacheKey(getUnreadKey(req.user.id));
+    sendToUser(req.user.id, 'notification_read', {});
     res.json({ ok: true });
   } catch (err) {
     next(err);

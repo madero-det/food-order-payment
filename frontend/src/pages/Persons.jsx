@@ -235,6 +235,11 @@ export default function Persons({ user, onUserUpdate }) {
                         {p.role === 'admin' ? 'Admin' : 'User'}
                       </span>
                     </div>
+                    {p.email && (
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                        {p.email}
+                      </div>
+                    )}
                     <div className="person-card-sub">
                       <span style={{ color: '#6b7280' }}>
                         {p.profile_image ? 'Click avatar to preview' : 'No profile photo'}
@@ -275,6 +280,11 @@ export default function Persons({ user, onUserUpdate }) {
                       {p.role === 'admin' ? 'Admin' : 'User'}
                     </span>
                   </div>
+                  {p.email && (
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', padding: '0 0 0.25rem 0' }}>
+                      {p.email}
+                    </div>
+                  )}
                   {isAdmin && (
                     <div className="order-card-actions">
                       <button className="btn btn-ghost btn-sm" title="Edit" onClick={() => { setEditingPerson(p); setShowForm(true); }}>

@@ -38,4 +38,16 @@ export const broadcast = (event, data) => {
   });
 };
 
-export const getClientCount = () => clients.size;
+export const sendToUser = (userId, event, data) => {
+  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+
+  clients.forEach(({ userId: clientUserId, res }, connId) => {
+    if (clientUserId !== userId) return;
+    try {
+      res.write(message);
+    } catch (err) {
+      console.error(`Failed to send to client user=${userId} conn=${connId}:`, err.message);
+      clients.delete(connId);
+    }
+  });
+};

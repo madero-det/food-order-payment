@@ -48,8 +48,8 @@ export default function CropModal({ imageSrc, onCrop, onCancel }) {
     const dx = clientX - offset.x;
     const dy = clientY - offset.y;
     setPos(p => ({
-      x: Math.max(0, Math.min(p.x + dx, imgSize.w - cropSize)),
-      y: Math.max(0, Math.min(p.y + dy, imgSize.h - cropSize)),
+      x: Math.max(0, Math.min(p.x - dx, imgSize.w - cropSize)),
+      y: Math.max(0, Math.min(p.y - dy, imgSize.h - cropSize)),
     }));
     setOffset({ x: clientX, y: clientY });
   }, [dragging, offset, imgSize, cropSize]);
@@ -101,8 +101,8 @@ export default function CropModal({ imageSrc, onCrop, onCancel }) {
                   width: imgSize.w,
                   height: imgSize.h,
                   position: 'absolute',
-                  left: pos.x,
-                  top: pos.y,
+                  left: -pos.x,
+                  top: -pos.y,
                   pointerEvents: 'none',
                   userSelect: 'none',
                 }}

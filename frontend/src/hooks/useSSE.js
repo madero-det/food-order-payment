@@ -58,6 +58,7 @@ const useSSE = (onEvent) => {
       'deletion_requested',
       'deletion_cancelled',
       'deletion_approved',
+      'notification_read',
     ];
 
     eventTypes.forEach((eventType) => {
