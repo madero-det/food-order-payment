@@ -729,6 +729,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   font-size: var(--text-base);
   background: var(--color-input-bg);
   color: var(--color-text);
+  line-height: 1;
+}
+
+.date-nav .btn {
+  align-self: stretch;
 }
 
 .page-header {
