@@ -94,6 +94,16 @@ export const initDB = async () => {
       END $$;
 
       DO $$ BEGIN
+        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS telegram_order_chat_id VARCHAR(50);
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      DO $$ BEGIN
+        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS telegram_order_message_id INTEGER;
+      EXCEPTION WHEN duplicate_column THEN null;
+      END $$;
+
+      DO $$ BEGIN
         ALTER TABLE persons ADD COLUMN IF NOT EXISTS profile_image VARCHAR(255);
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
@@ -128,11 +138,6 @@ export const initDB = async () => {
 
       DO $$ BEGIN
         ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(10);
-      EXCEPTION WHEN duplicate_column THEN null;
-      END $$;
-
-      DO $$ BEGIN
-        ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS menu_item_id INTEGER;
       EXCEPTION WHEN duplicate_column THEN null;
       END $$;
 

@@ -159,6 +159,66 @@ export const sendDeletionNotification = async ({ orderId, personName, price, ord
   return result;
 };
 
+function buildOrderMessage({ orderId, personName, orderDate, items, price, notes }) {
+  const lines = [];
+  lines.push(`\u{1F37D}\uFE0F *NEW ORDER* #${orderId}`);
+  lines.push('');
+  lines.push(`\u{1F464} *Customer:* ${personName}`);
+  lines.push(`\u{1F4C5} *Order Date:* ${fmtDate(orderDate)}`);
+
+  if (items && items.length) {
+    lines.push('');
+    lines.push('*Items:*');
+    items.forEach((it, i) => {
+      const qty = it.quantity || 1;
+      const itemTotal = Number(it.price) * qty;
+      lines.push(`${i + 1}. ${it.name} x ${qty} \u2014 ${itemTotal.toLocaleString()} R`);
+    });
+  }
+
+  lines.push('');
+  lines.push(`\u{1F4B0} *Total:* ${Number(price).toLocaleString()} R`);
+
+  if (notes) {
+    lines.push('');
+    lines.push(`\u{1F4DD} *Notes:* ${notes}`);
+  }
+
+  return lines.join('\n');
+}
+
+export const sendOrderNotification = async (data) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_ORDER_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+
+  if (!token || !chatId || token === 'YOUR_BOT_TOKEN_HERE' || chatId === 'YOUR_CHAT_ID_HERE') {
+    console.log('Telegram not configured, skipping order notification');
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: buildOrderMessage(data), parse_mode: 'Markdown' }),
+    });
+    if (!res.ok) {
+      console.error('Telegram order send failed:', await res.text());
+      return null;
+    }
+    const result = await res.json();
+    return { chatId: result.result.chat.id, messageId: result.result.message_id };
+  } catch (err) {
+    console.error('Telegram order error:', err.message);
+    return null;
+  }
+};
+
+export const updateOrderNotification = async ({ chatId, messageId, ...data }) => {
+  if (!chatId || !messageId) return;
+  await editMessageText(chatId, messageId, buildOrderMessage(data));
+};
+
 export const sendUnpaidReminder = async (pool) => {
   try {
     const now = new Date();

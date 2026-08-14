@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import pool from '../db.js';
 import { requireAdmin } from '../middleware/auth.js';
-import { sendPaymentNotification, sendDeletionNotification, editMessageText } from '../telegram.js';
+import { sendPaymentNotification, sendDeletionNotification, sendOrderNotification, updateOrderNotification, editMessageText } from '../telegram.js';
 import { broadcast } from '../events.js';
 import { saveAdminPaymentNotification } from '../notifications.js';
 import { khmNow } from '../khm-datetime.js';
@@ -210,10 +210,10 @@ router.post('/', async (req, res, next) => {
     await client.query('BEGIN');
 
     const result = await client.query(
-      `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, payment_status, menu_item_id, additional_price)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `INSERT INTO food_orders (order_date, person_id, price, paid_amount, transaction_date, notes, payment_method, payment_status, additional_price)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, payment_status, null, additionalPrice]
+      [order_date, person_id, totalPrice, paid_amount || null, transaction_date || null, notes || null, payment_method || null, payment_status, additionalPrice]
     );
     const order = result.rows[0];
 
@@ -246,6 +246,22 @@ router.post('/', async (req, res, next) => {
       items: orderItems.rows,
       triggeredBy: req.user.id,
     });
+
+    sendOrderNotification({
+      orderId: order.id,
+      personName,
+      orderDate: order.order_date,
+      items: orderItems.rows,
+      price: order.price,
+      notes: order.notes,
+    }).then(async (tgResult) => {
+      if (tgResult) {
+        await pool.query(
+          `UPDATE food_orders SET telegram_order_chat_id = $1, telegram_order_message_id = $2 WHERE id = $3`,
+          [tgResult.chatId, tgResult.messageId, order.id]
+        );
+      }
+    }).catch(() => {});
 
     if (!isAdmin && paid_amount) {
       sendPaymentNotification({
@@ -431,6 +447,21 @@ router.put('/:id', async (req, res, next) => {
        WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
     ) : { rows: [] };
 
+    if (order.telegram_order_chat_id && order.telegram_order_message_id) {
+      const fresh = await pool.query('SELECT * FROM food_orders WHERE id = $1', [id]);
+      const freshOrder = fresh.rows[0];
+      updateOrderNotification({
+        chatId: freshOrder.telegram_order_chat_id,
+        messageId: freshOrder.telegram_order_message_id,
+        orderId: freshOrder.id,
+        personName,
+        orderDate: freshOrder.order_date,
+        items: orderItems.rows,
+        price: freshOrder.price,
+        notes: freshOrder.notes,
+      }).catch(() => {});
+    }
+
     broadcast('order_updated', {
       ...order,
       person_name: personName,
@@ -510,6 +541,21 @@ router.delete('/:id', async (req, res, next) => {
         `_Deleted via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(deletedOrder.telegram_chat_id, deletedOrder.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    }
+
+    if (deletedOrder.telegram_order_chat_id && deletedOrder.telegram_order_message_id) {
+      const personRes = await pool.query('SELECT name FROM persons WHERE id = $1', [deletedOrder.person_id]);
+      const personName = personRes.rows[0]?.name || 'Unknown';
+      const newText = [
+        '🗑️ *Order DELETED*',
+        '',
+        `👤 *Person:* ${personName}`,
+        `💰 *Amount:* ${Number(deletedOrder.price).toLocaleString()} R`,
+        `🍽️ *Order Date:* ${deletedOrder.order_date}`,
+        '',
+        `_Deleted via web at ${khmNow()}_`,
+      ].join('\n');
+      editMessageText(deletedOrder.telegram_order_chat_id, deletedOrder.telegram_order_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
     }
 
     broadcast('order_deleted', {
