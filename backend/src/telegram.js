@@ -368,6 +368,9 @@ const handleCallbackQuery = async (query, pool) => {
         return;
       }
       const order = result.rows[0];
+      if (order.telegram_order_chat_id && order.telegram_order_message_id) {
+        await deleteMessage(order.telegram_order_chat_id, order.telegram_order_message_id);
+      }
       await pool.query('DELETE FROM food_orders WHERE id = $1', [orderId]);
       const newText = [
         '\u{1F5D1}\uFE0F *Order DELETED*',
