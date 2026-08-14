@@ -106,6 +106,19 @@ export const editMessageText = async (chatId, messageId, text, extra = {}) => {
   }
 };
 
+export const deleteMessage = async (chatId, messageId) => {
+  if (!chatId || !messageId) return;
+  try {
+    await fetch(`${TELEGRAM_API}/deleteMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, message_id: messageId }),
+    });
+  } catch (err) {
+    console.error('Telegram deleteMessage error:', err.message);
+  }
+};
+
 export const sendDeletionNotification = async ({ orderId, personName, price, orderDate, requestedBy }) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import pool from '../db.js';
 import { requireAdmin } from '../middleware/auth.js';
-import { sendPaymentNotification, sendDeletionNotification, sendOrderNotification, updateOrderNotification, editMessageText } from '../telegram.js';
+import { sendPaymentNotification, sendDeletionNotification, sendOrderNotification, updateOrderNotification, editMessageText, deleteMessage } from '../telegram.js';
 import { broadcast } from '../events.js';
 import { saveAdminPaymentNotification } from '../notifications.js';
 import { khmNow } from '../khm-datetime.js';
@@ -22,6 +22,38 @@ function isValidDateTime(str) {
   if (!match) return false;
   const d = new Date(`${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:00Z`);
   return d.getUTCFullYear() === Number(match[1]) && (d.getUTCMonth() + 1) === Number(match[2]) && d.getUTCDate() === Number(match[3]);
+}
+
+async function replaceOrderItems(orderId, items, additionalPrice) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM order_items WHERE order_id = $1', [orderId]);
+    let totalPrice = 0;
+    for (const item of items) {
+      if (item.menu_item_id) {
+        await client.query(
+          'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
+          [orderId, item.menu_item_id, item.quantity || 1, item.price]
+        );
+        totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      }
+    }
+    if (items.length > 0) {
+      await client.query(
+        'UPDATE food_orders SET price = $1, additional_price = $2 WHERE id = $3',
+        [totalPrice + additionalPrice, additionalPrice, orderId]
+      );
+    } else {
+      await client.query('UPDATE food_orders SET additional_price = $1 WHERE id = $2', [additionalPrice, orderId]);
+    }
+    await client.query('COMMIT');
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 router.get('/', async (req, res, next) => {
@@ -307,16 +339,26 @@ router.put('/:id', async (req, res, next) => {
       const check = await pool.query('SELECT person_id, price, paid_amount as old_paid FROM food_orders WHERE id = $1', [id]);
       if (check.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
       if (check.rows[0].person_id !== req.user.id) return res.status(403).json({ error: 'Access denied' });
+      if (check.rows[0].old_paid != null) {
+        return res.status(400).json({ error: 'This order is already paid and cannot be updated.' });
+      }
 
-      if (!isValidDateTime(transaction_date)) {
+      if (transaction_date && !isValidDateTime(transaction_date)) {
         return res.status(400).json({ error: 'Invalid transaction_date' });
       }
+
+      if (items !== undefined) {
+        await replaceOrderItems(id, items, Number(additional_price) || 0);
+      }
+
+      const fresh = await pool.query('SELECT price FROM food_orders WHERE id = $1', [id]);
+      const currentPrice = Number(fresh.rows[0].price);
 
       const hasPaymentSubmitted = paid_amount != null;
       if (hasPaymentSubmitted) {
         if (!payment_method) return res.status(400).json({ error: 'Payment method is required when paying' });
         if (payment_method !== 'cash' && !transaction_date) return res.status(400).json({ error: 'Transaction date is required when paying' });
-        if (Number(paid_amount) !== Number(check.rows[0].price)) return res.status(400).json({ error: 'Paid amount must match the order price' });
+        if (Number(paid_amount) !== currentPrice) return res.status(400).json({ error: 'Paid amount must match the order price' });
       }
       const paymentStatus = hasPaymentSubmitted ? 'pending' : null;
 
@@ -326,10 +368,11 @@ router.put('/:id', async (req, res, next) => {
              transaction_date = $2,
              payment_status = COALESCE($4, payment_status),
              payment_method = COALESCE($5, payment_method),
+             notes = COALESCE($6, notes),
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $3
          RETURNING *`,
-        [paid_amount || null, transaction_date || null, id, paymentStatus, payment_method || null]
+        [paid_amount || null, transaction_date || null, id, paymentStatus, payment_method || null, notes || null]
       );
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Order not found' });
@@ -378,6 +421,21 @@ router.put('/:id', async (req, res, next) => {
          WHERE oi.order_id = $1 ORDER BY oi.id`, [id]
       );
 
+      if (order.telegram_order_chat_id && order.telegram_order_message_id) {
+        const freshOrder = await pool.query('SELECT * FROM food_orders WHERE id = $1', [id]);
+        const fresh = freshOrder.rows[0];
+        updateOrderNotification({
+          chatId: fresh.telegram_order_chat_id,
+          messageId: fresh.telegram_order_message_id,
+          orderId: fresh.id,
+          personName,
+          orderDate: fresh.order_date,
+          items: orderItems.rows,
+          price: fresh.price,
+          notes: fresh.notes,
+        }).catch(() => {});
+      }
+
       return res.json({ ...order, person_name: personName, person_avatar: personAvatar, items: orderItems.rows });
     }
 
@@ -411,34 +469,7 @@ router.put('/:id', async (req, res, next) => {
     const personName = personResult.rows[0].name;
 
     if (items !== undefined) {
-      const client = await pool.connect();
-      try {
-        await client.query('BEGIN');
-        await client.query('DELETE FROM order_items WHERE order_id = $1', [id]);
-        let totalPrice = 0;
-        for (const item of items) {
-          if (item.menu_item_id) {
-            await client.query(
-              'INSERT INTO order_items (order_id, menu_item_id, quantity, price) VALUES ($1, $2, $3, $4)',
-              [id, item.menu_item_id, item.quantity || 1, item.price]
-            );
-            totalPrice += (Number(item.price) || 0) * (Number(item.quantity) || 1);
-          }
-        }
-        if (items.length > 0) {
-          const addPrice = Number(additional_price) || 0;
-          await client.query('UPDATE food_orders SET price = $1, additional_price = $2 WHERE id = $3', [totalPrice + addPrice, addPrice, id]);
-        } else {
-          const addPrice = Number(additional_price) || 0;
-          await client.query('UPDATE food_orders SET additional_price = $1 WHERE id = $2', [addPrice, id]);
-        }
-        await client.query('COMMIT');
-      } catch (err) {
-        try { await client.query('ROLLBACK'); } catch (_) {}
-        throw err;
-      } finally {
-        client.release();
-      }
+      await replaceOrderItems(id, items, Number(additional_price) || 0);
     }
 
     const orderItems = items?.length ? await pool.query(
@@ -544,18 +575,7 @@ router.delete('/:id', async (req, res, next) => {
     }
 
     if (deletedOrder.telegram_order_chat_id && deletedOrder.telegram_order_message_id) {
-      const personRes = await pool.query('SELECT name FROM persons WHERE id = $1', [deletedOrder.person_id]);
-      const personName = personRes.rows[0]?.name || 'Unknown';
-      const newText = [
-        '🗑️ *Order DELETED*',
-        '',
-        `👤 *Person:* ${personName}`,
-        `💰 *Amount:* ${Number(deletedOrder.price).toLocaleString()} R`,
-        `🍽️ *Order Date:* ${deletedOrder.order_date}`,
-        '',
-        `_Deleted via web at ${khmNow()}_`,
-      ].join('\n');
-      editMessageText(deletedOrder.telegram_order_chat_id, deletedOrder.telegram_order_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
+      deleteMessage(deletedOrder.telegram_order_chat_id, deletedOrder.telegram_order_message_id).catch(() => {});
     }
 
     broadcast('order_deleted', {
@@ -732,15 +752,19 @@ router.post('/:id/approve-deletion', requireAdmin, async (req, res, next) => {
       const personRes = await pool.query('SELECT name FROM persons WHERE id = $1', [deletedOrder.person_id]);
       const personName = personRes.rows[0]?.name || 'Unknown';
       const newText = [
-        '✅ *Deletion APPROVED*',
+        '🗑️ *Order DELETED*',
         '',
         `👤 *Person:* ${personName}`,
         `💰 *Amount:* ${Number(deletedOrder.price).toLocaleString()} R`,
         `🍽️ *Order Date:* ${deletedOrder.order_date}`,
         '',
-        `_Approved via web at ${khmNow()}_`,
+        `_Deletion approved via web at ${khmNow()}_`,
       ].join('\n');
       editMessageText(deletedOrder.telegram_chat_id, deletedOrder.telegram_message_id, newText, { reply_markup: { inline_keyboard: [] } }).catch(() => {});
+    }
+
+    if (deletedOrder.telegram_order_chat_id && deletedOrder.telegram_order_message_id) {
+      deleteMessage(deletedOrder.telegram_order_chat_id, deletedOrder.telegram_order_message_id).catch(() => {});
     }
 
     broadcast('deletion_approved', {
