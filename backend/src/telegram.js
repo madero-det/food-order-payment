@@ -279,6 +279,12 @@ export const startTelegramPolling = (pool) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token || token === 'YOUR_BOT_TOKEN_HERE') return;
 
+  const pollingFlag = (process.env.TELEGRAM_POLLING || '').toLowerCase();
+  if (['off', 'false', '0', 'no'].includes(pollingFlag)) {
+    console.log('Telegram polling disabled (TELEGRAM_POLLING != on)');
+    return;
+  }
+
   const poll = async () => {
     try {
       const res = await fetch(`${TELEGRAM_API}/getUpdates?offset=${pollingOffset}&timeout=10`);
