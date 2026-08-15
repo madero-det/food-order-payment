@@ -5,9 +5,12 @@ dotenv.config();
 
 const defaultTypeParser = pg.types.getTypeParser;
 
-const dbConfig = process.env.DATABASE_URL ? {
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+const url = process.env.DATABASE_URL;
+const isLocalHost = !!url && /@(localhost|127\.0\.0\.1)(:\d+)?\//.test(url);
+
+const dbConfig = url ? {
+  connectionString: url,
+  ...(isLocalHost ? {} : { ssl: { rejectUnauthorized: false } }),
 } : {
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
