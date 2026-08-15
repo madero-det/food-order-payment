@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import cloudinary from 'cloudinary';
-import { existsSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import pool from '../db.js';
@@ -25,6 +25,15 @@ const upload = multer({
     cb(null, ext && mime);
   },
 });
+
+const storageMode = process.env.AVATAR_STORAGE === 'local' ? 'local' : 'cloudinary';
+
+const AVATAR_EXTS = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+};
 
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -158,25 +167,43 @@ router.post('/:id/avatar', upload.single('image'), async (req, res, next) => {
     }
 
     const existing = await pool.query('SELECT profile_image FROM persons WHERE id = $1', [id]);
-    if (existing.rows[0]?.profile_image) {
-      const publicId = existing.rows[0].profile_image.match(/\/upload\/v\d+\/(.+)\./);
-      if (publicId) {
-        cloudinary.v2.uploader.destroy(publicId[1]).catch(() => {});
-      }
-    }
+    const oldImage = existing.rows[0]?.profile_image;
 
-    const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    const uploadResult = await cloudinary.v2.uploader.upload(b64, {
-      folder: 'food-order-avatars',
-      public_id: `avatar-${id}-${Date.now()}`,
-      width: 400,
-      height: 400,
-      crop: 'fill',
-    });
+    let imageUrl;
+
+    if (storageMode === 'local') {
+      const ext = AVATAR_EXTS[req.file.mimetype] || '.jpg';
+      const filename = `avatars/avatar-${id}-${Date.now()}${ext}`;
+      const filePath = join(uploadsDir, filename);
+      mkdirSync(dirname(filePath), { recursive: true });
+      writeFileSync(filePath, req.file.buffer);
+      if (oldImage && !oldImage.startsWith('http')) {
+        const oldPath = join(uploadsDir, oldImage);
+        if (existsSync(oldPath)) unlinkSync(oldPath);
+      }
+      imageUrl = filename;
+    } else {
+      if (oldImage) {
+        const publicId = oldImage.match(/\/upload\/v\d+\/(.+)\./);
+        if (publicId) {
+          cloudinary.v2.uploader.destroy(publicId[1]).catch(() => {});
+        }
+      }
+
+      const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+      const uploadResult = await cloudinary.v2.uploader.upload(b64, {
+        folder: 'food-order-avatars',
+        public_id: `avatar-${id}-${Date.now()}`,
+        width: 400,
+        height: 400,
+        crop: 'fill',
+      });
+      imageUrl = uploadResult.secure_url;
+    }
 
     const result = await pool.query(
       'UPDATE persons SET profile_image = $1 WHERE id = $2 RETURNING id, name, email, role, profile_image, default_price',
-      [uploadResult.secure_url, id]
+      [imageUrl, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Person not found' });
