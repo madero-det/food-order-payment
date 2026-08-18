@@ -92,7 +92,7 @@ export default function OrderForm({ persons, menuItems = [], onSubmit, initialDa
       paid_amount: formData.paid_amount !== '' ? Number(formData.paid_amount) : null,
       person_id: Number(formData.person_id),
       transaction_date: formData.transaction_date || null,
-      notes: formData.notes || null,
+      notes: formData.notes || '',
       payment_method: formData.payment_method || null,
       additional_price: formData.additional_price !== '' ? Number(formData.additional_price) : 0,
       items: selectedItems.map(i => ({ menu_item_id: i.menu_item_id, quantity: i.quantity, price: i.price })),
