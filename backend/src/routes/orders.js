@@ -372,7 +372,7 @@ router.put('/:id', async (req, res, next) => {
              updated_at = CURRENT_TIMESTAMP
          WHERE id = $3
          RETURNING *`,
-        [paid_amount || null, transaction_date || null, id, paymentStatus, payment_method || null, notes || null]
+        [paid_amount || null, transaction_date || null, id, paymentStatus, payment_method || null, notes ?? null]
       );
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Order not found' });
@@ -459,7 +459,7 @@ router.put('/:id', async (req, res, next) => {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $8
        RETURNING *`,
-      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes || null, payment_method || null, id, Number(additional_price) || 0]
+      [order_date, person_id, price, paid_amount || null, transaction_date || null, notes ?? null, payment_method || null, id, Number(additional_price) || 0]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });

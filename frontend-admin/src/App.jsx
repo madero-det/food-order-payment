@@ -27,12 +27,13 @@ class ErrorBoundary extends Component {
 import { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, ShoppingCart, UserCircle, Bell, Settings as SettingsIcon, LogOut,
-  Sun, Moon, Menu, X
+  LayoutDashboard, ShoppingCart, Users, UserCircle, Bell, Settings as SettingsIcon, LogOut,
+  Sun, Moon, Menu, X, ChefHat
 } from 'lucide-react';
 import Login, { loadAuth, clearAuth } from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DailyOrders from './pages/DailyOrders';
+import Persons from './pages/Persons';
 import PersonOrders from './pages/PersonOrders';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
@@ -132,12 +133,31 @@ function AppContent() {
         addToast(msg, 'success');
         notify('Payment Approved', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
         refreshUnread();
+      } else if (user.role === 'admin' && !data.fromApproval) {
+        const msg = `The payment for ${Number(data.price).toLocaleString()} R has been updated!\nName: ${data.person_name}\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
+        addToast(msg, 'success');
+        notify('Payment Updated', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
+        refreshUnread();
       }
     } else if (event === 'payment_rejected' && pid === uid) {
       const msg = `Your payment for ${Number(data.price).toLocaleString()} R has been rejected.\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
         addToast(msg, 'error');
         notify('Payment Rejected', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
         refreshUnread();
+    } else if (event === 'payment_submitted') {
+      if (user.role === 'admin') {
+        const msg = `${data.person_name || 'User'} submitted a payment of ${Number(data.price).toLocaleString()} R for approval.\nOrder: ${formatDate(data.order_date)}\nTxn: ${formatDateTime(data.transaction_date)}`;
+        addToast(msg, 'warning');
+        notify('Payment Pending Approval', msg, `payment-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
+        refreshUnread();
+      }
+    } else if (event === 'deletion_requested') {
+      if (user.role === 'admin') {
+        const msg = `${data.person_name || 'User'} requested to delete order #${data.id} (${Number(data.price).toLocaleString()} R).\nOrder: ${formatDate(data.order_date)}`;
+        addToast(msg, 'warning');
+        notify('Delete Request Pending', msg, `deletion-${data.id}`, `/orders?date=${formatDate(data.order_date)}`);
+        refreshUnread();
+      }
     } else if (event === 'deletion_cancelled' && pid === uid) {
       const msg = `Your delete request for order #${data.id} (${Number(data.price).toLocaleString()} R) has been cancelled.`;
       addToast(msg, 'error');
@@ -194,8 +214,18 @@ function AppContent() {
               <ShoppingCart size={18} /> <span className="nav-link-text">Orders</span>
             </NavLink>
             <NavLink to="/person-orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
-              <UserCircle size={18} /> <span className="nav-link-text">My Orders</span>
+              <UserCircle size={18} /> <span className="nav-link-text">{user.role === 'admin' ? 'Person Orders' : 'My Orders'}</span>
             </NavLink>
+            {user.role === 'admin' && (
+              <NavLink to="/persons" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+                <Users size={18} /> <span className="nav-link-text">Persons</span>
+              </NavLink>
+            )}
+            {user.role === 'admin' && (
+              <NavLink to="/menu" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
+                <ChefHat size={18} /> <span className="nav-link-text">Menu</span>
+              </NavLink>
+            )}
           </div>
           <div className="nav-right">
             <NavbarAvatar user={user} />
@@ -224,10 +254,11 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/orders" element={<DailyOrders />} />
+            <Route path="/persons" element={<Persons user={user} onUserUpdate={setUser} />} />
             <Route path="/person-orders" element={<PersonOrders />} />
-            <Route path="/menu" element={<MenuPage />} />
             <Route path="/notifications" element={<Notifications onCountChange={setUnreadCount} />} />
             <Route path="/settings" element={<Settings onUserUpdate={setUser} />} />
+            <Route path="/menu" element={<MenuPage />} />
           </Routes>
         </main>
       </div>
