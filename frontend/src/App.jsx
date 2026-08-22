@@ -25,15 +25,14 @@ class ErrorBoundary extends Component {
 }
 
 import { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { HashRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import {
-  LayoutDashboard, ShoppingCart, UserCircle, Bell, Settings as SettingsIcon, LogOut,
+  LayoutDashboard, ShoppingCart, Bell, Settings as SettingsIcon, LogOut,
   Sun, Moon, Menu, X
 } from 'lucide-react';
 import Login, { loadAuth, clearAuth } from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import DailyOrders from './pages/DailyOrders';
-import PersonOrders from './pages/PersonOrders';
 import Settings from './pages/Settings';
 import Notifications from './pages/Notifications';
 import MenuPage from './pages/MenuPage';
@@ -193,9 +192,6 @@ function AppContent() {
             <NavLink to="/orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
               <ShoppingCart size={18} /> <span className="nav-link-text">Orders</span>
             </NavLink>
-            <NavLink to="/person-orders" className={({ isActive }) => isActive ? 'active' : ''} onClick={() => setMenuOpen(false)} role="menuitem">
-              <UserCircle size={18} /> <span className="nav-link-text">My Orders</span>
-            </NavLink>
           </div>
           <div className="nav-right">
             <NavbarAvatar user={user} />
@@ -224,7 +220,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/orders" element={<DailyOrders />} />
-            <Route path="/person-orders" element={<PersonOrders />} />
+            <Route path="/person-orders" element={<Navigate to="/" replace />} />
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/notifications" element={<Notifications onCountChange={setUnreadCount} />} />
             <Route path="/settings" element={<Settings onUserUpdate={setUser} />} />

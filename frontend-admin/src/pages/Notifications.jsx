@@ -21,21 +21,19 @@ function timeAgo(dateStr) {
 function notifIcon(type) {
   switch (type) {
     case 'payment_approved':
-      return { color: '#16a34a', icon: <CheckCircle size={18} /> };
-    case 'payment_rejected':
-      return { color: '#dc2626', icon: <XCircle size={18} /> };
-    case 'payment_submitted':
-      return { color: '#d97706', icon: <AlertCircle size={18} /> };
-    case 'payment_updated':
-      return { color: '#2563eb', icon: <RefreshCw size={18} /> };
-    case 'deletion_requested':
-      return { color: '#d97706', icon: <Trash2 size={18} /> };
-    case 'deletion_cancelled':
-      return { color: '#6b7280', icon: <XCircle size={18} /> };
     case 'deletion_approved':
-      return { color: '#16a34a', icon: <CheckCircle size={18} /> };
+      return { color: 'var(--color-success)', bg: 'var(--color-success-light)', icon: <CheckCircle size={18} /> };
+    case 'payment_rejected':
+      return { color: 'var(--color-danger)', bg: 'var(--color-danger-light)', icon: <XCircle size={18} /> };
+    case 'payment_submitted':
+    case 'deletion_requested':
+      return { color: 'var(--color-warning)', bg: 'var(--color-warning-light)', icon: <AlertCircle size={18} /> };
+    case 'payment_updated':
+      return { color: 'var(--color-primary)', bg: 'var(--color-primary-soft)', icon: <RefreshCw size={18} /> };
+    case 'deletion_cancelled':
+      return { color: 'var(--color-text-muted)', bg: 'var(--color-border-light)', icon: <XCircle size={18} /> };
     default:
-      return { color: '#6b7280', icon: <Bell size={18} /> };
+      return { color: 'var(--color-text-muted)', bg: 'var(--color-border-light)', icon: <Bell size={18} /> };
   }
 }
 
@@ -124,52 +122,36 @@ export default function Notifications({ onCountChange }) {
       {loading ? (
         <p style={{ color: 'var(--color-text-muted)', textAlign: 'center', padding: '2rem' }}>Loading...</p>
       ) : notifications.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-          <Bell size={48} stroke="#d1d5db" strokeWidth={1.5} style={{ margin: '0 auto 1rem', display: 'block' }} />
-          <p style={{ color: 'var(--color-text-muted)' }}>No notifications yet</p>
+        <div className="card notif-empty">
+          <Bell size={48} strokeWidth={1.5} />
+          <p>No notifications yet</p>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card notif-list">
           {notifications.map((notif) => {
             const icon = notifIcon(notif.type);
             return (
               <div
                 key={notif.id}
                 onClick={() => handleClick(notif)}
-                className={notif.is_read ? '' : 'notif-unread'}
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '0.75rem',
-                  padding: '0.875rem 1rem',
-                  borderBottom: '1px solid #f3f4f6',
-                  cursor: notif.order_id ? 'pointer' : 'default',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={(e) => { if (notif.is_read) e.currentTarget.style.background = '#f9fafb'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = notif.is_read ? 'transparent' : 'var(--notif-unread-bg, #eff6ff)'; }}
+                className={`notif-item ${notif.is_read ? '' : 'notif-unread'} ${notif.order_id ? 'clickable' : ''}`}
               >
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: `${icon.color}15`, color: icon.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {notifIcon(notif.type).icon}
+                <div
+                  className="notif-icon-wrap"
+                  style={{ background: icon.bg, color: icon.color }}
+                >
+                  {icon.icon}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: notif.is_read ? 400 : 600, fontSize: '0.9rem' }}>{notif.title}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#9ca3af', whiteSpace: 'nowrap', flexShrink: 0 }}>{timeAgo(notif.created_at)}</span>
+                <div className="notif-content">
+                  <div className="notif-header">
+                    <span className="notif-title">{notif.title}</span>
+                    <span className="notif-time">{timeAgo(notif.created_at)}</span>
                   </div>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#6b7280', whiteSpace: 'pre-line' }}>{notif.message}</p>
+                  <p className="notif-message">{notif.message}</p>
                 </div>
                 <button
+                  className="notif-delete-btn"
                   onClick={(e) => { e.stopPropagation(); handleDelete(notif.id); }}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: '#9ca3af', padding: '0.25rem', flexShrink: 0,
-                  }}
                   title="Delete notification"
                 >
                   <X size={14} />
@@ -181,11 +163,11 @@ export default function Notifications({ onCountChange }) {
       )}
 
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+        <div className="notif-pagination">
           {page > 1 && (
             <button className="btn btn-ghost btn-sm" onClick={() => fetchNotifications(page - 1)}>Previous</button>
           )}
-          <span style={{ fontSize: '0.85rem', color: '#6b7280', alignSelf: 'center' }}>Page {page} of {totalPages}</span>
+          <span>Page {page} of {totalPages}</span>
           {page < totalPages && (
             <button className="btn btn-ghost btn-sm" onClick={() => fetchNotifications(page + 1)}>Next</button>
           )}

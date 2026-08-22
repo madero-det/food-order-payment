@@ -59,27 +59,29 @@ export default function DailyOrders() {
 
   useSSE((event, data) => {
     const uid = user?.pid || user?.id;
-    const belongsToUser = isAdmin || Number(data.person_id) === Number(uid);
     if (event === 'order_created') {
-      if (data.order_date === date && data.triggeredBy !== uid && belongsToUser) {
-        setOrders(prev => [...prev, {
-          id: data.id,
-          order_date: data.order_date,
-          price: Number(data.price),
-          paid_amount: data.paid_amount != null ? Number(data.paid_amount) : null,
-          transaction_date: data.transaction_date,
-          payment_status: data.payment_status,
-          deletion_status: data.deletion_status,
-          person_id: data.person_id,
-          person_name: data.person_name,
-          person_avatar: data.person_avatar || null,
-          notes: data.notes || null,
-          payment_method: data.payment_method || null,
-          items: data.items || [],
-        }]);
+      if (data.order_date === date && data.triggeredBy !== uid) {
+        setOrders(prev => {
+          if (prev.some(o => o.id === data.id)) return prev;
+          return [...prev, {
+            id: data.id,
+            order_date: data.order_date,
+            price: Number(data.price),
+            paid_amount: data.paid_amount != null ? Number(data.paid_amount) : null,
+            transaction_date: data.transaction_date,
+            payment_status: data.payment_status,
+            deletion_status: data.deletion_status,
+            person_id: data.person_id,
+            person_name: data.person_name,
+            person_avatar: data.person_avatar || null,
+            notes: data.notes || null,
+            payment_method: data.payment_method || null,
+            items: data.items || [],
+          }];
+        });
       }
     } else if (event === 'order_updated') {
-      if (data.triggeredBy !== uid && belongsToUser) {
+      if (data.triggeredBy !== uid) {
         setOrders(prev => prev.map(o => o.id === data.id ? {
           ...o,
           price: Number(data.price ?? o.price),
@@ -95,11 +97,11 @@ export default function DailyOrders() {
         } : o));
       }
     } else if (event === 'order_deleted') {
-      if (data.triggeredBy !== uid && belongsToUser) {
+      if (data.triggeredBy !== uid) {
         setOrders(prev => prev.filter(o => o.id !== data.id));
       }
     } else if (event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected') {
-      if (data.triggeredBy !== uid && belongsToUser) {
+      if (data.triggeredBy !== uid) {
         setOrders(prev => prev.map(o => o.id === data.id ? {
           ...o,
           paid_amount: data.paid_amount != null ? Number(data.paid_amount) : null,
@@ -109,14 +111,12 @@ export default function DailyOrders() {
         } : o));
       }
     } else if (event === 'deletion_requested' || event === 'deletion_cancelled') {
-      if (belongsToUser) {
-        setOrders(prev => prev.map(o => o.id === data.id ? {
-          ...o,
-          deletion_status: data.deletion_status,
-        } : o));
-      }
+      setOrders(prev => prev.map(o => o.id === data.id ? {
+        ...o,
+        deletion_status: data.deletion_status,
+      } : o));
     } else if (event === 'deletion_approved') {
-      if (data.triggeredBy !== uid && belongsToUser) {
+      if (data.triggeredBy !== uid) {
         setOrders(prev => prev.filter(o => o.id !== data.id));
       }
     }
@@ -341,6 +341,7 @@ export default function DailyOrders() {
               onApproveDeletion={handleApproveDeletion}
               onCancelDeletion={handleCancelDeletion}
               isAdmin={isAdmin}
+              currentUser={user}
             />
           )}
         </div>

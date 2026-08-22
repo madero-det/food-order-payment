@@ -69,8 +69,10 @@ router.get('/', async (req, res, next) => {
     let paramIndex = 1;
 
     if (!isAdmin) {
-      whereClause += ` AND fo.person_id = $${paramIndex++}`;
-      params.push(req.user.id);
+      if (!date || person_id) {
+        whereClause += ` AND fo.person_id = $${paramIndex++}`;
+        params.push(req.user.id);
+      }
     }
 
     if (date) {

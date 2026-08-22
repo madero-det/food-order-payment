@@ -15,7 +15,7 @@ function sortItems(items) {
   });
 }
 
-export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove, onReject, onApproveDeletion, onCancelDeletion, isAdmin }) {
+export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove, onReject, onApproveDeletion, onCancelDeletion, isAdmin, currentUser }) {
   if (orders.length === 0) {
     return (
       <div className="empty-state">
@@ -60,6 +60,10 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
       )}
     </>
   );
+
+  const checkIsOwner = (order) => {
+    return isAdmin || (currentUser?.id && Number(order.person_id) === Number(currentUser.id)) || (currentUser?.pid && Number(order.person_id) === Number(currentUser.pid));
+  };
 
   const renderActions = (order) => (
     <ActionDropdown>
@@ -136,45 +140,50 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
         </tr>
       </thead>
       <tbody>
-        {orders.map((order, idx) => (
-          <tr key={order.id}>
-            <td>{idx + 1}</td>
-            <td>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {order.person_avatar ? (
-                  <img src={getImageUrl(order.person_avatar)} alt="" className="avatar" style={{ width: 26, height: 26 }} />
-                ) : (
-                  <div className="avatar avatar-initials" style={{ width: 26, height: 26, fontSize: '0.6rem' }}>
-                    {getInitials(order.person_name)}
+        {orders.map((order, idx) => {
+          const isOwner = checkIsOwner(order);
+          return (
+            <tr key={order.id}>
+              <td>{idx + 1}</td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {order.person_avatar ? (
+                    <img src={getImageUrl(order.person_avatar)} alt="" className="avatar" style={{ width: 26, height: 26 }} />
+                  ) : (
+                    <div className="avatar avatar-initials" style={{ width: 26, height: 26, fontSize: '0.6rem' }}>
+                      {getInitials(order.person_name)}
+                    </div>
+                  )}
+                  <div>
+                    <strong>{order.person_name}</strong>
                   </div>
-                )}
-                <div>
-                  <strong>{order.person_name}</strong>
                 </div>
-              </div>
-            </td>
-            <td style={{ fontSize: '0.85rem' }}>
-              {order.items && order.items.length > 0 ? (
-                <span>
-                  <span style={{ color: '#2563eb' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
-                  {order.notes && <span style={{ color: '#d97706' }}> ({order.notes})</span>}
-                </span>
-              ) : order.notes ? (
-                <span style={{ color: '#d97706' }}>({order.notes})</span>
-              ) : '-'}
-            </td>
-            <td>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span>{formatRiel(order.price)}</span>
-                {order.payment_method && <span className="badge" style={{ background: order.payment_method === 'cash' ? '#dbeafe' : '#d1fae5', color: order.payment_method === 'cash' ? '#1e40af' : '#065f46', fontSize: '0.6rem', padding: '0.1rem 0.35rem', whiteSpace: 'nowrap' }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>}
-              </div>
-            </td>
-            <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
-            <td className="hide-mobile">{formatDate(order.transaction_date)}</td>
-            <td>{renderBadges(order)}</td>
-            <td className="text-right">{renderActions(order)}</td>
-          </tr>
-        ))}
+              </td>
+              <td style={{ fontSize: '0.85rem' }}>
+                {order.items && order.items.length > 0 ? (
+                  <span>
+                    <span style={{ color: 'var(--color-primary)' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
+                    {order.notes && <span style={{ color: 'var(--color-warning)' }}> ({order.notes})</span>}
+                  </span>
+                ) : order.notes ? (
+                  <span style={{ color: 'var(--color-warning)' }}>({order.notes})</span>
+                ) : '-'}
+              </td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span>{formatRiel(order.price)}</span>
+                  {order.payment_method && <span className="badge" style={{ background: order.payment_method === 'cash' ? '#dbeafe' : '#d1fae5', color: order.payment_method === 'cash' ? '#1e40af' : '#065f46', fontSize: '0.6rem', padding: '0.1rem 0.35rem', whiteSpace: 'nowrap' }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>}
+                </div>
+              </td>
+              <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
+              <td className="hide-mobile">{formatDate(order.transaction_date)}</td>
+              <td>{renderBadges(order)}</td>
+              <td className="text-right">
+                {isOwner ? renderActions(order) : <span style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', paddingRight: '0.5rem' }}>View only</span>}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
     </div>
@@ -182,61 +191,64 @@ export default function OrderTable({ orders, onPay, onEdit, onDelete, onApprove,
 
     {/* Mobile cards */}
     <div className="mobile-cards">
-      {orders.map((order, idx) => (
-        <div className="order-card" key={order.id}>
-          <div className="order-card-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {order.person_avatar ? (
-                <img src={getImageUrl(order.person_avatar)} alt="" className="avatar" style={{ width: 28, height: 28 }} />
-              ) : (
-                <div className="avatar avatar-initials" style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
-                  {getInitials(order.person_name)}
+      {orders.map((order) => {
+        const isOwner = checkIsOwner(order);
+        return (
+          <div className="order-card" key={order.id}>
+            <div className="order-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {order.person_avatar ? (
+                  <img src={getImageUrl(order.person_avatar)} alt="" className="avatar" style={{ width: 28, height: 28 }} />
+                ) : (
+                  <div className="avatar avatar-initials" style={{ width: 28, height: 28, fontSize: '0.65rem' }}>
+                    {getInitials(order.person_name)}
+                  </div>
+                )}
+                <span className="order-date">{order.person_name}</span>
+              </div>
+              {renderBadges(order)}
+            </div>
+            <div className="order-card-body">
+              {order.items && order.items.length > 0 && (
+                <div className="order-card-row">
+                  <span className="label">Items</span>
+                  <span className="value">
+                    <span style={{ color: 'var(--color-primary)' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
+                    {order.notes && <span style={{ color: 'var(--color-warning)' }}> ({order.notes})</span>}
+                  </span>
                 </div>
               )}
-              <span className="order-date">{order.person_name}</span>
-            </div>
-            {renderBadges(order)}
-          </div>
-            <div className="order-card-body">
-            {order.items && order.items.length > 0 && (
+              {order.notes && !order.items?.length && (
+                <div className="order-card-row">
+                  <span className="label">Notes</span>
+                  <span className="value" style={{ color: 'var(--color-text-secondary)' }}>{order.notes}</span>
+                </div>
+              )}
+              {order.payment_method && (
+                <div className="order-card-row">
+                  <span className="label">Method</span>
+                  <span className="value" style={{ color: order.payment_method === 'cash' ? '#1e40af' : '#065f46' }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>
+                </div>
+              )}
               <div className="order-card-row">
-                <span className="label">Items</span>
-                <span className="value">
-                  <span style={{ color: '#2563eb' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
-                  {order.notes && <span style={{ color: '#d97706' }}> ({order.notes})</span>}
-                </span>
+                <span className="label">Price</span>
+                <span className="value">{formatRiel(order.price)}</span>
               </div>
-            )}
-            {order.notes && !order.items?.length && (
               <div className="order-card-row">
-                <span className="label">Notes</span>
-                <span className="value" style={{ color: '#6b7280' }}>{order.notes}</span>
+                <span className="label">Paid</span>
+                <span className="value">{formatRiel(order.paid_amount)}</span>
               </div>
-            )}
-            {order.payment_method && (
               <div className="order-card-row">
-                <span className="label">Method</span>
-                <span className="value" style={{ color: order.payment_method === 'cash' ? '#1e40af' : '#065f46' }}>{order.payment_method === 'cash' ? 'Cash' : 'Bank'}</span>
+                <span className="label">Transaction</span>
+                <span className="value">{formatDate(order.transaction_date)}</span>
               </div>
-            )}
-            <div className="order-card-row">
-              <span className="label">Price</span>
-              <span className="value">{formatRiel(order.price)}</span>
             </div>
-            <div className="order-card-row">
-              <span className="label">Paid</span>
-              <span className="value">{formatRiel(order.paid_amount)}</span>
-            </div>
-            <div className="order-card-row">
-              <span className="label">Transaction</span>
-              <span className="value">{formatDate(order.transaction_date)}</span>
+            <div className="order-card-actions">
+              {isOwner ? renderActions(order) : <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', padding: '0.25rem 0' }}>View only</span>}
             </div>
           </div>
-          <div className="order-card-actions">
-            {renderActions(order)}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
     </>
   );

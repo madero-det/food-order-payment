@@ -36,6 +36,7 @@
   --color-badge-pending-bg: #fef3c7;
   --color-badge-pending-text: #92400e;
   --color-notif-unread: #eff6ff;
+  --color-notif-unread-hover: #e0f2fe;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -97,7 +98,8 @@ body.dark {
   --color-badge-unpaid-text: #fca5a5;
   --color-badge-pending-bg: #78350f;
   --color-badge-pending-text: #fcd34d;
-  --color-notif-unread: #1e3a5f;
+  --color-notif-unread: rgba(59, 130, 246, 0.12);
+  --color-notif-unread-hover: rgba(59, 130, 246, 0.2);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.35);
@@ -1652,8 +1654,131 @@ td .actions-dropdown { overflow: visible; }
 }
 
 /* ── Notifications ──────────────────────── */
-.notif-unread {
+.notif-list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  position: relative;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item.clickable {
+  cursor: pointer;
+}
+
+.notif-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.notif-item.notif-unread {
   background: var(--color-notif-unread);
+}
+
+.notif-item.notif-unread:hover {
+  background: var(--color-notif-unread-hover);
+}
+
+.notif-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.notif-title {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.notif-unread .notif-title {
+  font-weight: 600;
+}
+
+.notif-time {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notif-message {
+  margin: 0.25rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: pre-line;
+  line-height: 1.45;
+}
+
+.notif-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.notif-delete-btn:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.notif-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--color-text-muted);
+}
+
+.notif-empty svg {
+  margin: 0 auto 1rem;
+  display: block;
+  stroke: var(--color-text-muted);
+}
+
+.notif-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
 }
 
 /* ── Text Utilities ────────────────────── */

@@ -1,128 +1,350 @@
-import { useState, useEffect } from 'react';
-import { ShoppingCart } from 'lucide-react';
-import { api, getImageUrl } from '../api/client';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileSpreadsheet } from 'lucide-react';
+import { api, API_BASE } from '../api/client';
 import useSSE from '../hooks/useSSE';
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return isMobile;
+}
+
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
 export default function Dashboard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const user = api.getCurrentUser();
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const now = new Date();
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const sentinelRef = useRef(null);
+  const limit = 15;
 
-  const fetchDashboard = async (silent = false) => {
-    if (!silent) setLoading(true);
+  const currentYear = now.getFullYear();
+  const years = [currentYear, currentYear - 1, currentYear - 2];
+
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+  const fetchOrders = useCallback(async (p, append = false) => {
+    if (!user?.id) return;
+    if (p === 1) setLoading(true); else setLoadingMore(true);
+    const params = {
+      person_id: user.id,
+      start_date: startDate,
+      end_date: endDate,
+      page: p,
+      limit,
+    };
     try {
-      setData(await api.getDashboard({}));
+      const data = await api.getOrders(params);
+      if (append) {
+        setOrders(prev => [...prev, ...data.orders]);
+      } else {
+        setOrders(data.orders);
+      }
+      setPage(data.page);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+      setHasMore(data.page < data.totalPages);
+      setSummary(data.summary);
     } catch (err) {
-      console.error(err);
+      if (!append) setOrders([]);
     }
-    if (!silent) setLoading(false);
-  };
+    setLoading(false);
+    setLoadingMore(false);
+  }, [user?.id, startDate, endDate]);
 
-  useEffect(() => { fetchDashboard(); }, []);
+  useEffect(() => {
+    setPage(1);
+    setHasMore(false);
+    fetchOrders(1, false);
+  }, [fetchOrders]);
 
-  useSSE((event) => {
-    if (['order_created', 'order_updated', 'order_deleted', 'payment_submitted', 'payment_approved', 'payment_rejected', 'deletion_requested', 'deletion_cancelled', 'deletion_approved'].includes(event)) {
-      fetchDashboard(true);
+  useEffect(() => {
+    if (!isMobile) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          fetchOrders(page + 1, true);
+        }
+      },
+      { rootMargin: '100px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [isMobile, hasMore, loadingMore, page, fetchOrders]);
+
+  useSSE((event, data) => {
+    if (event === 'order_created' || event === 'order_updated' || event === 'order_deleted' ||
+        event === 'payment_submitted' || event === 'payment_approved' || event === 'payment_rejected' ||
+        event === 'deletion_requested' || event === 'deletion_cancelled' || event === 'deletion_approved') {
+      if (!data.triggeredBy || data.person_id === Number(user?.id) || data.triggeredBy === 'telegram') {
+        fetchOrders(page, false);
+      }
     }
   });
 
-  const formatRiel = (amount) => `${Number(amount).toLocaleString()} R`;
-
-  const todayOrders = data?.today_orders || [];
-
-  const StatusBadge = ({ o }) => {
-    if (o.paid_amount != null) {
-      if (o.payment_status === 'pending') return <span className="badge badge-pending">Pending</span>;
-      if (o.payment_status === 'rejected') return <span className="badge badge-rejected">Rejected</span>;
-      return <span className="badge badge-paid">Paid</span>;
+  const handleExport = async () => {
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/dashboard/export?month=${month}&year=${year}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders-${year}-${String(month).padStart(2, '0')}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export error:', err);
     }
-    return <span className="badge badge-unpaid">Unpaid</span>;
   };
 
-  const PersonCell = ({ o }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-      {o.person_avatar ? (
-        <img src={getImageUrl(o.person_avatar)} alt="" className="avatar" style={{ width: 24, height: 24 }} />
-      ) : (
-        <div className="avatar avatar-initials" style={{ width: 24, height: 24, fontSize: '0.6rem' }}>
-          {o.person_name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()}
-        </div>
-      )}
-      <strong>{o.person_name}</strong>
-    </div>
-  );
+  const formatRiel = (amount) => amount != null ? `${Number(amount).toLocaleString()} R` : '-';
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in-up">
-        <div className="page-header">
-          <div className="skeleton skeleton-text lg" style={{ width: 140, height: 24 }} />
-        </div>
-        <div className="skeleton-card" style={{ height: 350 }} />
-      </div>
-    );
+  function sortItems(items) {
+    if (!items || !items.length) return items;
+    return [...items].sort((a, b) => {
+      if (a.is_rice && !b.is_rice) return 1;
+      if (!a.is_rice && b.is_rice) return -1;
+      return 0;
+    });
   }
+
+  const formatDisplayDate = (dt) => {
+    if (!dt) return '-';
+    const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return dt;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[Number(m[2]) - 1]} ${Number(m[3])}, ${m[1]}`;
+  };
+
+  const formatTime = (dt) => {
+    if (!dt) return '';
+    const s = String(dt).replace(' ', 'T');
+    const m = s.match(/T(\d{2}):(\d{2})/);
+    if (!m) return '';
+    const h = Number(m[1]);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m[2]} ${ampm}`;
+  };
 
   return (
     <div className="animate-fade-in-up">
       <div className="page-header">
         <h1>Dashboard</h1>
+        <div className="date-nav">
+          <select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
+            {monthNames.map((m, i) => (
+              <option key={i + 1} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <select value={year} onChange={(e) => setYear(Number(e.target.value))}>
+            {years.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          <button className="btn btn-primary" onClick={handleExport}>
+            <FileSpreadsheet size={16} /> Export Excel
+          </button>
+        </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h2>Today's Orders</h2>
+      {summary && (
+        <div className="stats-grid" style={{ marginTop: '1rem' }}>
+          <div className="stat-card animate-fade-in-up-d1">
+            <div className="label">Total Orders</div>
+            <div className="value blue">{summary.total_orders}</div>
+          </div>
+          <div className="stat-card animate-fade-in-up-d2">
+            <div className="label">Total Spent</div>
+            <div className="value">{formatRiel(summary.total_spent)}</div>
+          </div>
+          <div className="stat-card animate-fade-in-up-d3">
+            <div className="label">Total Paid</div>
+            <div className="value green">{formatRiel(summary.total_paid)}</div>
+          </div>
+          <div className="stat-card animate-fade-in-up-d4">
+            <div className="label">Total Unpaid</div>
+            <div className="value red">{formatRiel(summary.total_unpaid)}</div>
+          </div>
         </div>
-        {todayOrders.length === 0 ? (
-          <div className="empty-state"><ShoppingCart size={32} /><p>No orders today</p></div>
+      )}
+
+      <div className="card" style={{ marginTop: '1rem' }}>
+        {loading ? (
+          <div className="empty-state">Loading...</div>
+        ) : orders.length === 0 ? (
+          <div className="empty-state">No orders found for {monthNames[month - 1]} {year}</div>
         ) : (
           <>
-            <div className="table-wrapper">
-              <div className="table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Name</th>
-                      <th>Price</th>
-                      <th>Paid</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {todayOrders.map((o, idx) => (
-                      <tr key={o.id}>
-                        <td>{idx + 1}</td>
-                        <td><PersonCell o={o} /></td>
-                        <td>{formatRiel(o.price)}</td>
-                        <td>{formatRiel(o.paid_amount)}</td>
-                        <td><StatusBadge o={o} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div className="table-wrapper">
+          <div className="table-scroll">
+          <table>
+            <thead>
+               <tr>
+                 <th>#</th>
+                 <th>Date</th>
+                 <th>Items</th>
+                 <th>Price</th>
+                 <th className="hide-mobile">Paid</th>
+                 <th className="hide-mobile">Transaction Date</th>
+                 <th>Status</th>
+               </tr>
+             </thead>
+             <tbody>
+               {orders.map((order, idx) => (
+                 <tr
+                   key={order.id}
+                   onClick={() => order.paid_amount == null && navigate(`/orders?date=${order.order_date}`)}
+                   style={order.paid_amount == null ? { cursor: 'pointer' } : undefined}
+                 >
+                   <td>{idx + 1}</td>
+                   <td>{formatDisplayDate(order.order_date)}</td>
+                   <td style={{ fontSize: '0.85rem' }}>
+                     {order.items && order.items.length > 0 ? (
+                       <span>
+                         <span style={{ color: 'var(--color-primary)' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
+                         {order.notes && <span style={{ color: 'var(--color-warning)' }}> ({order.notes})</span>}
+                       </span>
+                     ) : order.notes ? (
+                       <span style={{ color: 'var(--color-warning)' }}>({order.notes})</span>
+                     ) : '-'}
+                   </td>
+                   <td>{formatRiel(order.price)}</td>
+                  <td className="hide-mobile">{formatRiel(order.paid_amount)}</td>
+                  <td className="hide-mobile">
+                    {order.transaction_date
+                      ? `${formatDisplayDate(order.transaction_date)} ${formatTime(order.transaction_date)}`
+                      : '-'}
+                  </td>
+                  <td>
+                    {order.paid_amount != null ? (
+                      order.payment_status === 'pending' ? (
+                        <span className="badge badge-pending">Pending</span>
+                      ) : order.payment_status === 'rejected' ? (
+                        <span className="badge badge-rejected">Rejected</span>
+                      ) : (
+                        <span className="badge badge-paid">Paid</span>
+                      )
+                    ) : (
+                      <span className="badge badge-unpaid">Unpaid</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+          </div>
 
-            <div className="mobile-cards">
-              {todayOrders.map((o, idx) => (
-                <div className="order-card" key={o.id}>
-                  <div className="order-card-header">
-                    <PersonCell o={o} />
-                    <StatusBadge o={o} />
+          <div className="mobile-cards">
+            {orders.map((order, idx) => (
+              <div
+                className="order-card"
+                key={order.id}
+                onClick={() => order.paid_amount == null && navigate(`/orders?date=${order.order_date}`)}
+                style={order.paid_amount == null ? { cursor: 'pointer' } : undefined}
+              >
+                <div className="order-card-header">
+                  <span className="order-date">{formatDisplayDate(order.order_date)}</span>
+                  {order.paid_amount != null ? (
+                    order.payment_status === 'pending' ? (
+                      <span className="badge badge-pending">Pending</span>
+                    ) : order.payment_status === 'rejected' ? (
+                      <span className="badge badge-rejected">Rejected</span>
+                    ) : (
+                      <span className="badge badge-paid">Paid</span>
+                    )
+                  ) : (
+                    <span className="badge badge-unpaid">Unpaid</span>
+                  )}
+                </div>
+                <div className="order-card-body">
+                  <div className="order-card-row" style={{ fontSize: '0.85rem' }}>
+                    <span className="label">Items</span>
+                    <span className="value">
+                      {order.items && order.items.length > 0 ? (
+                        <span>
+                          <span style={{ color: 'var(--color-primary)' }}>{sortItems(order.items).map(i => i.name).join(', ')}</span>
+                          {order.notes && <span style={{ color: 'var(--color-warning)' }}> ({order.notes})</span>}
+                        </span>
+                      ) : order.notes ? (
+                        <span style={{ color: 'var(--color-warning)' }}>({order.notes})</span>
+                      ) : '-'}
+                    </span>
                   </div>
-                  <div className="order-card-body">
-                    <div className="order-card-row">
-                      <span className="label">Price</span>
-                      <span className="value">{formatRiel(o.price)}</span>
-                    </div>
-                    <div className="order-card-row">
-                      <span className="label">Paid</span>
-                      <span className="value">{formatRiel(o.paid_amount)}</span>
-                    </div>
+                  <div className="order-card-row">
+                    <span className="label">Price</span>
+                    <span className="value">{formatRiel(order.price)}</span>
+                  </div>
+                  <div className="order-card-row">
+                    <span className="label">Paid</span>
+                    <span className="value">{formatRiel(order.paid_amount)}</span>
+                  </div>
+                  <div className="order-card-row">
+                    <span className="label">Transaction</span>
+                    <span className="value">
+                      {order.transaction_date
+                        ? `${formatDisplayDate(order.transaction_date)} ${formatTime(order.transaction_date)}`
+                        : '-'}
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+
+          {!isMobile && totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+              {page > 1 && (
+                <button className="btn btn-ghost btn-sm" onClick={() => fetchOrders(page - 1, false)}>Previous</button>
+              )}
+              <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)', alignSelf: 'center' }}>Page {page} of {totalPages}</span>
+              {page < totalPages && (
+                <button className="btn btn-ghost btn-sm" onClick={() => fetchOrders(page + 1, false)}>Next</button>
+              )}
             </div>
+          )}
+
+          {isMobile && loadingMore && (
+            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+              Loading more...
+            </div>
+          )}
+          {isMobile && !hasMore && orders.length > limit && (
+            <div style={{ textAlign: 'center', padding: '0.5rem', color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
+              All {orders.length} orders loaded
+            </div>
+          )}
+          {isMobile && hasMore && <div ref={sentinelRef} />}
           </>
         )}
       </div>
